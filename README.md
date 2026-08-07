@@ -49,11 +49,13 @@
 
 ### 第一步：安装脚本管理器
 你需要一个浏览器扩展来运行此脚本，强烈推荐安装：
+- 🟢 [ScriptCat (脚本猫)](https://scriptcat.org/) - 推荐！支持 Edge, Chrome, Firefox 等主流浏览器，更适合国内网络环境。
 - 🟢 [Tampermonkey (篡改猴)](https://www.tampermonkey.net/) - 支持 Chrome, Edge, Safari, Firefox 等主流浏览器。
 
 ### 第二步：一键安装脚本
 点击下方的链接，你的脚本管理器会自动弹出安装界面，点击**“安装”**即可。
-👉 **[一键安装 DS Enhance Max](https://raw.githubusercontent.com/TRYuuu233/DS-Enhance-Max/main/ds-enhance-max.user.js)**
+👉 **[一键安装 DS Enhance Max (脚本猫)](https://scriptcat.org/zh-CN/script-show-page/7372)**
+*(备用线路)* 👉 **[一键安装 DS Enhance Max (GitHub)](https://raw.githubusercontent.com/TRYuuu233/DS-Enhance-Max/main/ds-enhance-max.user.js)**
 
 ### 第三步：见证奇迹
 刷新你的 [DeepSeek Chat](https://chat.deepseek.com/) 页面，尽情享受满血版带来的极致效率吧！
