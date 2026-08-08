@@ -821,7 +821,7 @@
                     <button class="ds-tab-btn" data-tab="export">批量导出与 Fork</button>
                     <button class="ds-tab-btn" data-tab="rename">整理与分类 (AI)</button>
                     <button class="ds-tab-btn" data-tab="ai">大模型神经中枢</button>
-                    <button class="ds-tab-btn" data-tab="about" style="margin-left:auto; color:#8b5cf6;">👨‍💻 关于开发者</button>
+                    <button class="ds-tab-btn" data-tab="about" style="margin-left:auto; color:#8b5cf6;">关于开发者</button>
                 </div>
 
                 <!-- Tab 1: 数据与检索 -->
@@ -842,7 +842,7 @@
 
                             <div class="ds-advanced-selection-bar" style="background:#f8fafc; border:1px dashed #cbd5e1; border-radius:8px; padding:10px; margin-top:4px; display:flex; flex-direction:column; gap:8px;">
                                         <div style="display:flex; justify-content:space-between; align-items:center;">
-                                            <span style="font-size:12px; font-weight:600; color:#475569;">🎯 快捷选择面板 (按标签)</span>
+                                            <span style="font-size:12px; font-weight:600; color:#475569;">快捷选择面板 (按标签)</span>
                                             <div style="display:flex; gap:6px;">
                                                 <button class="ds-btn" id="ds-select-invert-btn" style="padding:4px 8px; font-size:11px; background:#fff; border:1px solid #cbd5e1; color:#475569; cursor:pointer; border-radius:4px;">反选</button>
                                             </div>
@@ -880,7 +880,7 @@
                             <div class="ds-action-group" style="border:none; padding:8px 0 4px 0; background:transparent;">
                                 <input type="text" id="ds-ai-search-keyword" placeholder="可以试着说：找出你认为可能成为黑历史的对话..." style="flex:1;" />
                                 <button class="ds-btn ds-btn-sync" id="ds-ai-search-btn" style="background:linear-gradient(90deg, #10b981, #059669);">下令</button>
-                                <button class="ds-btn" id="ds-ai-abort-btn" style="display:none; background:#ef4444; color:#fff; padding:9px 14px;">⏹ 中止</button>
+                                <button class="ds-btn" id="ds-ai-abort-btn" style="display:none; background:#ef4444; color:#fff; padding:9px 14px;">中止</button>
                             </div>
 
                             <div id="ds-progress-wrap-ai" style="height:6px; background:#f1f5f9; border-radius:3px; margin-bottom:14px; overflow:hidden; margin-top:12px;">
@@ -927,7 +927,7 @@
                     <div class="ds-action-group" style="display:flex; gap:10px; margin-bottom:16px;">
                         <input type="text" id="ds-prompt-name" placeholder="起个名字，如：专业程序员、英语翻译官..." style="flex:1;">
                         <button class="ds-btn ds-btn-sync" id="ds-prompt-add-btn">新增提示词</button>
-                        <button class="ds-btn" id="ds-prompt-preset-btn" style="background:#8b5cf6; color:#fff; border:none;">🎁 载入 10 款顶级专家预设</button>
+                        <button class="ds-btn" id="ds-prompt-preset-btn" style="background:#8b5cf6; color:#fff; border:none;">载入 10 款顶级专家预设</button>
                     </div>
                     <div id="ds-prompt-list" style="display:flex; flex-direction:column; gap:10px; max-height:450px; overflow-y:auto; padding-right:8px;">
                         <!-- JS 动态渲染 Prompt Card -->
@@ -968,7 +968,7 @@
                                     🚀 执行极速导出 (应用于已选会话)
                                 </button>
                                 <button class="ds-btn" id="ds-export-abort-btn" style="display:none; width: 100%; padding: 10px; background: #ef4444; color: #fff; border-radius: 8px; font-weight: 600; margin-top: 4px; border: none; cursor: pointer;">
-                                    ⏹ 终止导出
+                                    终止导出
                                 </button>
                             </div>
                         </div>
@@ -990,7 +990,7 @@
                                     ✨ 开启平行宇宙克隆 (应用于已选会话)
                                 </button>
                                 <button class="ds-btn" id="ds-fork-abort-btn" style="display:none; width: 100%; padding: 10px; background: #ef4444; color: #fff; border-radius: 8px; font-weight: 600; margin-top: 4px; border: none; cursor: pointer;">
-                                    ⏹ 终止克隆
+                                    终止克隆
                                 </button>
                             </div>
                         </div>
@@ -1010,16 +1010,16 @@
                         <input type="text" id="ds-rename-suffix" placeholder="添加后缀 (如: -已归档)" style="flex:1;">
                         <button class="ds-btn ds-btn-scan" id="ds-rename-btn">🏷️ 执行批量重命名 (应用于已选会话)</button>
                     </div>
-                    <div class="ds-pane-header" style="margin-top:10px;">🎯 手动批量打标 (应用于当前所有勾选的会话)</div>
+                    <div class="ds-pane-header" style="margin-top:10px;">手动批量打标 (应用于当前所有勾选的会话)</div>
                     <div style="background:#f1f5f9; border:1px solid #e2e8f0; border-radius:8px; padding:12px; margin-bottom:12px;">
                         <div style="display:flex; gap:10px; margin-bottom:8px;">
                             <input type="text" id="ds-bulk-tag-name" placeholder="标签名称 (例如: 优秀回答)" style="flex:2;">
                             <select id="ds-bulk-tag-color" style="flex:1; padding:0 8px; border-radius:4px; border:1px solid #cbd5e1;">
-                                <option value="#3b82f6" style="color:#3b82f6;">🔵 蓝色</option>
-                                <option value="#10b981" style="color:#10b981;">🟢 绿色</option>
-                                <option value="#f59e0b" style="color:#f59e0b;">🟠 橙色</option>
-                                <option value="#ef4444" style="color:#ef4444;">🔴 红色</option>
-                                <option value="#8b5cf6" style="color:#8b5cf6;">🟣 紫色</option>
+                                <option value="#3b82f6" style="color:#3b82f6;">蓝色</option>
+                                <option value="#10b981" style="color:#10b981;">绿色</option>
+                                <option value="#f59e0b" style="color:#f59e0b;">橙色</option>
+                                <option value="#ef4444" style="color:#ef4444;">红色</option>
+                                <option value="#8b5cf6" style="color:#8b5cf6;">紫色</option>
                             </select>
                             <button class="ds-btn ds-btn-scan" id="ds-bulk-tag-btn" style="padding:0 12px; height:auto;">执行批量打标</button>
                         </div>
@@ -1053,11 +1053,11 @@
                         <div style="display:flex; gap:10px; margin-bottom:8px;">
                             <input type="text" id="ds-rule-keyword" placeholder="输入匹配文本 (例如: 总结)" style="flex:2;">
                             <select id="ds-rule-color" style="flex:1; padding:0 8px; border-radius:4px; border:1px solid #cbd5e1;">
-                                <option value="#3b82f6" style="color:#3b82f6;">🔵 蓝色标签</option>
-                                <option value="#10b981" style="color:#10b981;">🟢 绿色标签</option>
-                                <option value="#f59e0b" style="color:#f59e0b;">🟠 橙色标签</option>
-                                <option value="#ef4444" style="color:#ef4444;">🔴 红色标签</option>
-                                <option value="#8b5cf6" style="color:#8b5cf6;">🟣 紫色标签</option>
+                                <option value="#3b82f6" style="color:#3b82f6;">蓝色标签</option>
+                                <option value="#10b981" style="color:#10b981;">绿色标签</option>
+                                <option value="#f59e0b" style="color:#f59e0b;">橙色标签</option>
+                                <option value="#ef4444" style="color:#ef4444;">红色标签</option>
+                                <option value="#8b5cf6" style="color:#8b5cf6;">紫色标签</option>
                             </select>
                             <input type="text" id="ds-rule-tagname" placeholder="标签名称 (例如: 摘要)" style="flex:1;">
                             <button class="ds-btn ds-btn-sync" id="ds-rule-add-btn" style="padding:0 12px; height:auto;">+ 添加规则</button>
@@ -1068,10 +1068,10 @@
                     </div>
 
                     <div class="ds-action-group" style="display:flex; gap:10px; align-items:center;">
-                        <button class="ds-btn ds-btn-sync" id="ds-rule-run-btn" style="background:#10b981;">▶ 运行本地规则自动打标</button>
-                        <span style="font-size:12px; color:#64748b; margin-left:auto;">或让 AI 帮您批量打标 👉</span>
+                        <button class="ds-btn ds-btn-sync" id="ds-rule-run-btn" style="background:#10b981;">运行本地规则自动打标</button>
+                        <span style="font-size:12px; color:#64748b; margin-left:auto;">或让 AI 帮您批量打标 </span>
                         <button class="ds-btn ds-btn-sync" id="ds-ai-categorize-btn" style="background:linear-gradient(135deg, #3b82f6, #6366f1); box-shadow:0 4px 14px rgba(59,130,246,0.3); border:none; transition:all 0.3s;">AI 智能整理 (应用于已选会话)</button>
-                        <button class="ds-btn" id="ds-ai-categorize-abort-btn" style="display:none; background:#ef4444; color:#fff; padding:9px 14px;">⏹ 中止</button>
+                        <button class="ds-btn" id="ds-ai-categorize-abort-btn" style="display:none; background:#ef4444; color:#fff; padding:9px 14px;">中止</button>
                     </div>
 
                     <!-- AI 分类预览区 -->
@@ -1082,7 +1082,7 @@
                         </div>
                     </div>
                     <div id="ds-ai-categorize-preview" style="display:none; margin-top:12px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:12px;">
-                        <div style="font-size:13px; font-weight:600; color:#1e293b; margin-bottom:8px;">📋 AI 整理计划预览</div>
+                        <div style="font-size:13px; font-weight:600; color:#1e293b; margin-bottom:8px;">AI 整理计划预览</div>
                         <div id="ds-ai-preview-list" style="max-height:200px; overflow-y:auto; font-size:12px; color:#475569; display:flex; flex-direction:column; gap:4px; margin-bottom:12px; border:1px solid #cbd5e1; padding:6px; border-radius:4px; background:#fff;"></div>
                         <div style="display:flex; justify-content:flex-end; gap:8px;">
                             <button class="ds-btn ds-btn-close" id="ds-ai-cancel-plan-btn">取消</button>
@@ -1143,7 +1143,7 @@
                             </div>
                         </div>
                         <div style="margin-bottom:16px;">
-                            <button class="ds-btn ds-btn-clear" id="ds-ai-fetch-models-btn" style="padding:4px 10px; font-size:11px; background:#e2e8f0; color:#475569; border-radius:4px; border:none; margin-top:4px;">🔄 自动获取可用模型列表</button>
+                            <button class="ds-btn ds-btn-clear" id="ds-ai-fetch-models-btn" style="padding:4px 10px; font-size:11px; background:#e2e8f0; color:#475569; border-radius:4px; border:none; margin-top:4px;">自动获取可用模型列表</button>
                             <div id="ds-fetched-models-wrap" style="display:none; margin-top:8px; padding:10px; background:#fff; border:1px solid #e2e8f0; border-radius:8px;">
                                 <div style="font-size:11px; color:#10b981; margin-bottom:8px;" id="ds-fetched-models-status">已加载 0 个模型。</div>
                                 <div id="ds-fetched-models-list" style="display:flex; flex-wrap:wrap; gap:6px; max-height:120px; overflow-y:auto;"></div>
@@ -1151,11 +1151,11 @@
                         </div>
 
                         <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <button class="ds-btn" id="ds-ai-test-btn" style="background:#fff; color:#475569; border:1px solid #cbd5e1;">⚡ 测试连接</button>
+                            <button class="ds-btn" id="ds-ai-test-btn" style="background:#fff; color:#475569; border:1px solid #cbd5e1;">测试连接</button>
                             <div style="display:flex; gap:8px; align-items:center;">
                                 <div id="ds-ai-status" style="font-size:12px; display:none; padding:4px 8px; border-radius:4px;"></div>
                                 <button class="ds-btn" id="ds-ai-form-cancel" style="background:transparent; color:#64748b; border:1px solid #cbd5e1;">取消</button>
-                                <button class="ds-btn ds-btn-sync" id="ds-ai-save-btn" style="background:#10b981;">💾 保存配置</button>
+                                <button class="ds-btn ds-btn-sync" id="ds-ai-save-btn" style="background:#10b981;">保存配置</button>
                             </div>
                         </div>
                     </div>
@@ -1177,7 +1177,7 @@
                             </a>
                             
                             <a href="https://tryuuu.netlify.app/" target="_blank" style="display:flex; align-items:center; gap:8px; text-decoration:none; color:#fff; font-size:14px; padding:10px 24px; background:linear-gradient(90deg, #10b981, #059669); border-radius:24px; font-weight:600; margin-top:8px; transition:all 0.2s; box-shadow:0 4px 12px rgba(16,185,129,0.3);" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(16,185,129,0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(16,185,129,0.3)'">
-                                ☕ 联系我 && 支持打赏
+                                联系我 && 支持打赏
                             </a>
                         </div>
                     </div>
@@ -2019,7 +2019,7 @@ ${JSON.stringify(simplifiedList)}`;
                         results.forEach(r => {
                             md += `# ${r.title}\n\n`;
                             r.messages.forEach(m => {
-                                md += `### ${m.role === 'USER' ? '👨‍💻 用户' : '🤖 助手'}\n\n${m.content}\n\n---\n\n`;
+                                md += `### ${m.role === 'USER' ? '用户' : '🤖 助手'}\n\n${m.content}\n\n---\n\n`;
                             });
                         });
                         const blob = new Blob([md], { type: 'text/markdown' });
@@ -2862,7 +2862,7 @@ ${JSON.stringify(items.map(s => {
                 else if (!url.endsWith('/models')) url = url.endsWith('/') ? url + 'models' : url + '/models';
 
                 fetchedWrap.style.display = 'block';
-                fetchedStatus.textContent = '🔄 正在获取模型列表...';
+                fetchedStatus.textContent = '正在获取模型列表...';
                 fetchedStatus.style.color = '#3b82f6';
                 fetchedList.innerHTML = '';
                 aiFetchModelsBtn.disabled = true;
