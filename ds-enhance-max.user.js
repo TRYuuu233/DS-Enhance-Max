@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         DS Enhance Max (满血版) [适用最新DeepSeek网页]
 // @namespace    https://chat.deepseek.com/
-// @version      8.0.5
+// @version      8.0.6
 // @description  【满血升级】突破原生限制！支持 AI 智能会话搜索、AI 自动化标签整理、多大模型 API 自由切换、原生隔离级批量管理。集成批量删除、导出、自定义提示词以及批量FORK等满血增强功能。
 // @author       TRYuuu
 // @license      MIT
@@ -13,19 +13,19 @@
 
 /*
  * MIT License
- * 
+ *
  * Copyright (c) 2026 TRYuuu
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -205,7 +205,7 @@
             return new Promise((resolve) => {
                 const overlay = document.createElement('div');
                 overlay.className = 'ds-modal-overlay';
-                
+
         overlay.addEventListener('click', (e) => {
             // Prevent DeepSeek's global document click handler from crashing
             if (e.target && (e.target.tagName === 'svg' || e.target.tagName === 'path' || e.target.closest('.ds-tab-btn'))) {
@@ -225,17 +225,17 @@
                 `;
                 // 挂载到 html 根节点，完全跳出 body 可能存在的层叠上下文或点击拦截
                 document.documentElement.appendChild(overlay);
-                
+
                 const cancelBtn = overlay.querySelector('.ds-modal-cancel');
                 const confirmBtn = overlay.querySelector('.ds-modal-confirm');
-                
+
                 cancelBtn.addEventListener('click', (e) => {
                     e.preventDefault();
                     e.stopPropagation();
                     overlay.remove();
                     resolve(false);
                 });
-                
+
                 confirmBtn.addEventListener('click', (e) => {
                     e.preventDefault();
                     e.stopPropagation();
@@ -617,7 +617,7 @@
             .ds-toast.warning { border-left: 4px solid #f59e0b; }
             @keyframes ds-toast-in { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
             @keyframes ds-toast-out { from { transform: translateY(0); opacity: 1; } to { transform: translateY(-20px); opacity: 0; } }
-            
+
             .ds-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 2147483647; display: flex; justify-content: center; align-items: center; animation: ds-fadeIn 0.2s ease; pointer-events: auto; }
             .ds-modal-box { box-sizing: border-box; background: #ffffff; padding: 28px 32px; border-radius: 20px; box-shadow: 0 24px 60px rgba(0,0,0,0.3); max-width: 480px; width: 90%; animation: ds-slideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); pointer-events: auto; }
             .ds-modal-title { margin: 0 0 14px; font-size: 17px; font-weight: 700; color: #0f172a; }
@@ -880,7 +880,11 @@
                                 ⚠️ 请先在「① 本地历史记录基准」中同步历史数据，AI 才有内容可检索。
                             </div>
                             <div class="ds-action-group" style="border:none; padding:8px 0 4px 0; background:transparent;">
-                                <select id="ds-ai-search-mode" style="padding:8px; border-radius:10px; border:1px solid #cbd5e1; outline:none; background:#f8fafc; color:#1e293b; font-size:13px; font-weight:600; cursor:pointer;" title="极速: 仅提权，响应快&#10;深度: 提权 + 互联网嘴替吐槽，稍微耗时"><option value="fast">⚡ 极速</option><option value="deep">🧠 深度(吐槽)</option></select>
+                                <div class="ds-mode-toggle" id="ds-ai-search-mode-container" style="display:inline-flex; background:rgba(241,245,249,0.9); border-radius:20px; padding:4px; gap:4px; border:1px solid rgba(226,232,240,0.8); box-shadow:inset 0 2px 4px rgba(0,0,0,0.02);">
+                                    <button class="ds-mode-btn active" data-val="fast" style="padding:6px 18px; border-radius:16px; border:none; background:linear-gradient(135deg, #3b82f6, #2563eb); color:#fff; font-size:13px; font-weight:600; box-shadow:0 2px 8px rgba(59,130,246,0.3); cursor:pointer; transition:all 0.3s ease;">⚡ 极速</button>
+                                    <button class="ds-mode-btn" data-val="deep" style="padding:6px 18px; border-radius:16px; border:none; background:transparent; color:#64748b; font-size:13px; font-weight:600; cursor:pointer; transition:all 0.3s ease;" title="深度分析 + 互联网嘴替吐槽">🧠 深度(吐槽)</button>
+                                </div>
+                                <input type="hidden" id="ds-ai-search-mode" value="fast">
                                 <input type="text" id="ds-ai-search-keyword" placeholder="可以试着说：找出你认为可能成为黑历史的对话..." style="flex:1;" />
                                 <button class="ds-btn ds-btn-sync" id="ds-ai-search-btn" style="background:linear-gradient(90deg, #10b981, #059669);">下令</button>
                                 <button class="ds-btn" id="ds-ai-abort-btn" style="display:none; background:#ef4444; color:#fff; padding:9px 14px;">中止</button>
@@ -1172,16 +1176,16 @@
                     <div style="text-align:center; padding:40px 20px;">
                         <h3 style="font-size:24px; color:#1e293b; margin-bottom:12px; font-weight:800; background:linear-gradient(90deg, #3b82f6, #8b5cf6); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">DS Enhance Max</h3>
                         <p style="font-size:14px; color:#64748b; margin-bottom:30px; line-height:1.6;">突破限制的 DeepSeek 全能增强套件，专为极致效率而生。</p>
-                        
+
                         <div style="display:inline-flex; flex-direction:column; gap:16px; align-items:center; background:#f8fafc; padding:24px 40px; border-radius:16px; border:1px solid #e2e8f0; box-shadow:0 10px 30px rgba(0,0,0,0.05);">
                             <div style="width:80px; height:80px; border-radius:50%; background:linear-gradient(135deg, #3b82f6, #8b5cf6); display:flex; justify-content:center; align-items:center; color:#fff; font-size:32px; font-weight:bold; margin-bottom:8px; box-shadow:0 8px 20px rgba(139,92,246,0.3);">T</div>
                             <div style="font-size:18px; font-weight:700; color:#0f172a;">开发者: TRYuuu</div>
-                            
+
                             <a href="https://github.com/TRYuuu233/DS-Enhance-Max" target="_blank" style="display:flex; align-items:center; gap:8px; text-decoration:none; color:#475569; font-size:14px; padding:8px 16px; background:#fff; border:1px solid #cbd5e1; border-radius:20px; transition:all 0.2s; box-shadow:0 2px 4px rgba(0,0,0,0.02);" onmouseover="this.style.borderColor='#3b82f6'; this.style.color='#3b82f6'" onmouseout="this.style.borderColor='#cbd5e1'; this.style.color='#475569'">
                                 <svg height="16" width="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path></svg>
                                 GitHub 项目主页
                             </a>
-                            
+
                             <a href="https://tryuuu.netlify.app/" target="_blank" style="display:flex; align-items:center; gap:8px; text-decoration:none; color:#fff; font-size:14px; padding:10px 24px; background:linear-gradient(90deg, #10b981, #059669); border-radius:24px; font-weight:600; margin-top:8px; transition:all 0.2s; box-shadow:0 4px 12px rgba(16,185,129,0.3);" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(16,185,129,0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(16,185,129,0.3)'">
                                 联系我 && 支持打赏
                             </a>
@@ -1216,9 +1220,9 @@
         window.__dsSyncTagUI = () => {
             try { window.__dsLocalTags = JSON.parse(localStorage.getItem('ds_local_tags') || '{}'); } catch(e){}
             try { window.__dsGlobalTags = JSON.parse(localStorage.getItem('ds_global_tags') || '[]'); } catch(e){}
-            
+
             if (typeof window.__dsPopulateSelectByTag === 'function') window.__dsPopulateSelectByTag();
-            
+
             // 实时刷新列表，让会话上的标签视觉立刻更新
             if (typeof matchedSessions !== 'undefined' && matchedSessions.length > 0 && resultList) {
                 renderResultList(matchedSessions, resultList, resultCount, selectAllCb);
@@ -1263,7 +1267,7 @@
         };
 
         // 打开/关闭
-        
+
         let isDraggingBtn = false;
         let startX, startY, startLeft, startTop;
 
@@ -1272,7 +1276,7 @@
             if (pos && typeof pos.top === 'number' && typeof pos.left === 'number') {
                 triggerBtn.style.top = pos.top + 'px';
                 triggerBtn.style.left = pos.left + 'px';
-                triggerBtn.style.right = 'auto'; 
+                triggerBtn.style.right = 'auto';
             }
         } catch(e){}
 
@@ -1284,13 +1288,13 @@
             const rect = triggerBtn.getBoundingClientRect();
             startLeft = rect.left;
             startTop = rect.top;
-            
+
             // Immediately apply fixed px left/top and remove right pinning for smooth dragging
-            triggerBtn.style.right = 'auto'; 
+            triggerBtn.style.right = 'auto';
             triggerBtn.style.left = startLeft + 'px';
             triggerBtn.style.top = startTop + 'px';
             triggerBtn.style.transition = 'none'; // Prevent jitter when dragging
-            
+
             const onMouseMove = (moveEvent) => {
                 const dx = moveEvent.clientX - startX;
                 const dy = moveEvent.clientY - startY;
@@ -1300,17 +1304,17 @@
                 if (isDraggingBtn) {
                     let newLeft = startLeft + dx;
                     let newTop = startTop + dy;
-                    
+
                     const maxLeft = window.innerWidth - rect.width;
                     const maxTop = window.innerHeight - rect.height;
                     newLeft = Math.max(0, Math.min(newLeft, maxLeft));
                     newTop = Math.max(0, Math.min(newTop, maxTop));
-                    
+
                     triggerBtn.style.left = newLeft + 'px';
                     triggerBtn.style.top = newTop + 'px';
                 }
             };
-            
+
             const onMouseUp = () => {
                 triggerBtn.style.transition = 'all 0.2s ease';
                 document.removeEventListener('mousemove', onMouseMove);
@@ -1324,7 +1328,7 @@
                     } catch(err){}
                 }
             };
-            
+
             document.addEventListener('mousemove', onMouseMove);
             document.addEventListener('mouseup', onMouseUp);
         });
@@ -1460,6 +1464,26 @@
             }
         }, { passive: true });
 
+        const aiSearchModeContainer = overlay.querySelector('#ds-ai-search-mode-container');
+        const aiSearchModeInput = overlay.querySelector('#ds-ai-search-mode');
+        if (aiSearchModeContainer) {
+            aiSearchModeContainer.addEventListener('click', (e) => {
+                const btn = e.target.closest('.ds-mode-btn');
+                if (!btn) return;
+                aiSearchModeContainer.querySelectorAll('.ds-mode-btn').forEach(b => {
+                    b.classList.remove('active');
+                    b.style.background = 'transparent';
+                    b.style.color = '#64748b';
+                    b.style.boxShadow = 'none';
+                });
+                btn.classList.add('active');
+                btn.style.background = 'linear-gradient(135deg, #3b82f6, #2563eb)';
+                btn.style.color = '#fff';
+                btn.style.boxShadow = '0 2px 8px rgba(59,130,246,0.3)';
+                aiSearchModeInput.value = btn.dataset.val;
+            });
+        }
+
         aiAbortBtn.addEventListener('click', () => {
             if (aiAbortController) {
                 aiAbortController.abort();
@@ -1503,8 +1527,8 @@
             aiSearchBtn.style.display = 'none';
             aiAbortBtn.style.display = '';
             lockUI(true);
-            
-            let fakeProgressTimerAi = null;
+
+            if (window.__fakeProgressTimerAi) clearInterval(window.__fakeProgressTimerAi);
             if (progressBarAi) {
                 progressBarAi.style.width = '0%';
                 const loadingPhrases = [
@@ -1518,10 +1542,10 @@
                 let startTime = Date.now();
                 let currentTargetProgress = 0;
                 let curProgress = 0;
-                
+
                 const stEl4 = document.getElementById('ds-ai-search-status-text'); if(stEl4) stEl4.textContent = loadingPhrases[0].text;
-                
-                fakeProgressTimerAi = setInterval(() => {
+
+                window.__fakeProgressTimerAi = setInterval(() => {
                     const elapsed = (Date.now() - startTime) / 1000;
                     let activePhase = loadingPhrases[0];
                     for (let i = loadingPhrases.length - 1; i >= 0; i--) {
@@ -1530,7 +1554,7 @@
                             if (document.getElementById('ds-ai-search-status-text')?.textContent !== activePhase.text) {
                                 const stEl2 = document.getElementById('ds-ai-search-status-text'); if(stEl2) stEl2.style.opacity = '0';
                                 setTimeout(() => {
-                                    
+
                                     const stEl = document.getElementById('ds-ai-search-status-text');
                                     if(stEl) stEl.textContent = activePhase.text;
 
@@ -1549,27 +1573,42 @@
             }
 
             const total = Math.min(window.__dsCachedSessions.length, 2000);
-            
+
 
             aiAbortController = new AbortController();
             try {
+                const mode = aiSearchModeInput.value; // 'fast' or 'deep'
                 const sourceData = window.__dsCachedSessions.slice(0, 2000);
                 const tagsMap = {};
                 try { Object.assign(tagsMap, JSON.parse(localStorage.getItem('ds_local_tags') || '{}')); } catch(e){}
-                const simplifiedList = sourceData.map(s => {
-                    let item = { id: s.id, title: s.title };
-                    if (s.content) item.content = s.content;
-                    let stags = tagsMap[s.id];
-                    if (stags && stags.length > 0) item.tags = stags.map(t => t.name);
-                    return item;
-                });
+                
+                // 整数索引映射，大幅压缩 Token 消耗，增强大模型注意力
+                const idMap = [];
+                const textList = sourceData.map((s, index) => {
+                    idMap.push(s.id);
+                    let tags = tagsMap[s.id] ? ` [标签: ${tagsMap[s.id].map(t=>t.name).join(',')}]` : '';
+                    let content = s.content ? ` - 摘要: ${s.content.substring(0, 100)}` : '';
+                    return `[${index}] ${s.title}${tags}${content}`;
+                }).join('\n');
 
-                const prompt = `你是一个精准的数据筛选助手。
-请根据用户的需求，从下方的 JSON 数组中挑选出所有语义相关的对话记录。
+                let prompt = '';
+                if (mode === 'fast') {
+                    prompt = `你是一个精准的数据筛选助手。
+请根据用户的需求，从下方的列表中挑选出所有语义相关的对话记录。
+用户需求："${query}"
+
+请直接返回一个包含索引号的 JSON 数组（如 [0, 2, 5]），如果没有符合条件的，返回空数组 []。
+注意：仅返回 JSON 数组，不要返回 markdown 标记，不要任何多余文字。
+
+待匹配数据：
+${textList}`;
+                } else {
+                    prompt = `你是一个精准的数据筛选助手。
+请根据用户的需求，从下方的列表中挑选出所有语义相关的对话记录。
 用户需求："${query}"
 
 请返回一个 JSON 对象，包含两个字段：
-1. "ids": 纯 JSON 数组，包含符合条件的对象的 id，例如：["id1", "id2"]。如果没有符合条件的，返回空数组 []。
+1. "ids": 纯 JSON 数组，包含符合条件的对象的索引号，例如：[0, 2, 5]。如果没有符合条件的，返回空数组 []。
 2. "snarky_remark": 请扮演用户的“互联网嘴替”损友，对用户的这些对话内容或搜索需求进行无情吐槽。
 要求：
 - 【风格】使用当下中文互联网最高频的社交黑话，拥抱“发疯文学”或“乐子人”语感，拒绝书面语。
@@ -1578,7 +1617,8 @@
 返回纯 JSON 对象，不要返回 markdown 代码块标记，不要返回额外解释性文字，只输出合法的 JSON 结构。
 
 待匹配数据：
-${JSON.stringify(simplifiedList)}`;
+${textList}`;
+                }
 
                 let aiFetchTimeout = setTimeout(() => {
                     if (aiAbortController) {
@@ -1594,35 +1634,48 @@ ${JSON.stringify(simplifiedList)}`;
                     signal: aiAbortController.signal
                 });
 
-                
+
 
                 if (!resp.ok) throw new Error(`HTTP ${resp.status} - ${resp.statusText}`);
                 const data = await resp.json();
                 let reply = data?.choices?.[0]?.message?.content || '[]';
 
                 // 解析大模型的返回结果
-                let matchedIds = [];
+                let matchedIndexes = [];
                 let snarky = '';
-                const jsonMatch = reply.match(/\{[\s\S]*\}/);
-                if (jsonMatch) {
-                    try {
-                        const parsed = JSON.parse(jsonMatch[0]);
-                        matchedIds = parsed.ids || [];
-                        snarky = parsed.snarky_remark || '';
-                    } catch (e) {
-                        throw new Error('解析 JSON 失败: ' + e.message);
-                    }
-                } else {
-                    // Fallback to array if model ignored instructions
+                
+                if (mode === 'fast') {
                     const arrMatch = reply.match(/\[[\s\S]*\]/);
                     if (arrMatch) {
-                        try { matchedIds = JSON.parse(arrMatch[0]); } catch(e){}
+                        try { matchedIndexes = JSON.parse(arrMatch[0]); } catch(e){}
+                    }
+                } else {
+                    const jsonMatch = reply.match(/\{[\s\S]*\}/);
+                    if (jsonMatch) {
+                        try {
+                            const parsed = JSON.parse(jsonMatch[0]);
+                            matchedIndexes = parsed.ids || [];
+                            snarky = parsed.snarky_remark || '';
+                        } catch (e) {
+                            throw new Error('解析 JSON 失败: ' + e.message);
+                        }
+                    } else {
+                        // Fallback to array
+                        const arrMatch = reply.match(/\[[\s\S]*\]/);
+                        if (arrMatch) {
+                            try { matchedIndexes = JSON.parse(arrMatch[0]); } catch(e){}
+                        }
                     }
                 }
 
-                
-                if (typeof fakeProgressTimerAi !== 'undefined' && fakeProgressTimerAi) clearInterval(fakeProgressTimerAi);
-                
+                // Map indexes back to UUIDs
+                let matchedIds = matchedIndexes
+                    .filter(idx => Number.isInteger(idx) && idx >= 0 && idx < idMap.length)
+                    .map(idx => idMap[idx]);
+
+
+                if (window.__fakeProgressTimerAi) { clearInterval(window.__fakeProgressTimerAi); window.__fakeProgressTimerAi = null; }
+
                 if (progressBarAi) progressBarAi.style.width = '100%';
                 const stElFinal = document.getElementById('ds-ai-search-status-text');
                 if(stElFinal) stElFinal.style.display = 'none';
@@ -1630,8 +1683,8 @@ ${JSON.stringify(simplifiedList)}`;
 
                 const matchedSessions = sourceData.filter(s => matchedIds.includes(s.id));
                 renderResultList(matchedSessions, resultListAi, resultCountAi, selectAllCbAi);
-                
-                
+
+
                 // Final stats goes to local status
                 showAiStatus(`✨ AI 筛选完成！从 ${sourceData.length} 条数据中挑出了 ${matchedSessions.length} 条匹配记录。`);
                 // Show snarky remark in the dedicated box
@@ -1648,13 +1701,16 @@ ${JSON.stringify(simplifiedList)}`;
 
 
             } catch(e) {
+                if (window.__fakeProgressTimerAi) { clearInterval(window.__fakeProgressTimerAi); window.__fakeProgressTimerAi = null; }
+                const stElSearch = document.getElementById('ds-ai-search-status-text');
                 if (e.name === 'AbortError') {
-                    setStatus('🛑 AI 检索已被用户中止。');
+                    if (stElSearch) { stElSearch.style.display = 'block'; stElSearch.textContent = '🛑 AI 检索已被用户中止。'; }
                 } else {
-                    setStatus(`❌ AI 检索失败：${e.message}`);
+                    if (stElSearch) { stElSearch.style.display = 'block'; stElSearch.textContent = `❌ AI 检索失败：${e.message}`; }
                 }
                 progressBarAi.style.width = '0%';
             } finally {
+                if (window.__fakeProgressTimerAi) { clearInterval(window.__fakeProgressTimerAi); window.__fakeProgressTimerAi = null; }
                 aiAbortController = null;
                 aiSearchBtn.style.display = '';
                 aiAbortBtn.style.display = 'none';
@@ -1993,14 +2049,14 @@ ${JSON.stringify(simplifiedList)}`;
             saveCache();
             renderResultList(window.__dsCachedSessions, resultList, resultCount, selectAllCb);
 
-            dsAlert(`成功销毁 ${successCount} 个会话。`); 
+            dsAlert(`成功销毁 ${successCount} 个会话。`);
                 // 刷新插件数据
                 if (successCount > 0) {
                     // 从缓存中删除
                     const deletedIds = deletedLog.map(log => log.id);
                     window.__dsCachedSessions = window.__dsCachedSessions.filter(s => !deletedIds.includes(s.id));
                     saveCache();
-                    
+
                     // 重新渲染当前列表（如果是 AI 搜索列表则重新渲染 AI 列表，否则渲染全部缓存）
                     // 检查当前是不是在 AI 搜索面板
                     const aiTab = document.getElementById('ds-tab-ai');
@@ -2079,9 +2135,9 @@ ${JSON.stringify(simplifiedList)}`;
                     autoSaveTimer = setTimeout(() => {
                         const prompts = JSON.parse(localStorage.getItem(LS_PROMPTS) || '[]');
                         const match = prompts.find(x => x.id === p.id);
-                        if (match) { 
-                            match.content = ta.value; 
-                            savePrompts(prompts); 
+                        if (match) {
+                            match.content = ta.value;
+                            savePrompts(prompts);
                             card.style.borderColor = '#10b981';
                             setTimeout(() => card.style.borderColor = '#e2e8f0', 800);
                         }
@@ -2114,7 +2170,7 @@ ${JSON.stringify(simplifiedList)}`;
         if (promptPresetBtn) {
             promptPresetBtn.addEventListener('click', async () => {
                 if (!(await dsConfirm('此操作将清空您当前全部自定义提示词，并替换为精心调校的 10 款顶级专家角色预设（涵盖医疗、法律、技术、创作等领域）。\n\n操作不可撤销，确认执行吗？', '载入顶级专家预设'))) return;
-                
+
                 const presets = [
                     { name: '视觉设计总监 (Frontend UI/UX)', content: '你是一家顶尖独立设计工作室的设计总监。你的客户厌倦了模板化的平庸设计，他们需要具有独特视觉辨识度的设计方案。请做出非常刻意、有态度的选择，包括色彩调色板（提供4-6个命名Hex值，拒绝泛滥的配色）、独特的排版排布（不落俗套的展示字体和正文字体搭配，精确到字重和间距）以及恰到好处的微交互动画。如果需求不明确，请主动假定一个具体场景。不要堆砌装饰，不要乱用数字序号，只保留能真正服务于内容的结构。每一次设计都需要包含一个令人难忘的“签名元素”。回复请保持高级感，减少使用多余的Emoji。', enabled: false },
                     { name: '顶尖医疗首席专家', content: '你是全球顶尖的临床医学首席专家。请以极度严谨、客观且富有同理心的态度分析问题。不堆砌晦涩难懂的医学术语，而是用逻辑严密、循序渐进的语言拆解病理机制与治疗方案。提供基于最新循证医学依据的深刻见解。回复中不要带有任何夸张或情绪化的成分，保持医疗人员的专业克制与温度。最后务必附带免责声明：本分析仅供参考，不作为最终临床诊断，请务必遵从线下主治医师指导。', enabled: false },
@@ -2127,7 +2183,7 @@ ${JSON.stringify(simplifiedList)}`;
                     { name: '首席红队渗透专家', content: '你是具有顶级攻防实战经验的首席网络安全（红队）专家。请以进攻者的视角、零信任的原则审视目标。精准识别深层次的架构漏洞与潜在的攻击链路。提供冷酷、理性且极具深度的威胁情报分析，并反向推导给出系统化、多维度的防御加固与应急响应策略，确保合规与安全并重。', enabled: false },
                     { name: '高阶语言学大师', content: '你是深耕应用语言学数十年的跨文化交际大师。不仅纠正语法，更要从修辞学、语用学和跨文化心理的角度，将用户的语言打磨至极度地道且优雅的境界。剖析不同表达背后的微妙情绪与权力结构，提供最符合目标语境的高阶替换方案，赋予语言直抵人心的力量。', enabled: false }
                 ];
-                
+
                 const prompts = presets.map((p, index) => ({ id: Date.now() + index, name: p.name, content: p.content, enabled: p.enabled }));
                 savePrompts(prompts);
                 renderPrompts();
@@ -2401,7 +2457,7 @@ ${JSON.stringify(simplifiedList)}`;
                         let allTags = getGlobalTags();
                         allTags = allTags.filter(t => t.name !== nameToDel);
                         localStorage.setItem('ds_global_tags', JSON.stringify(allTags));
-                        
+
                         try {
                             let tagsMap = JSON.parse(localStorage.getItem('ds_local_tags') || '{}');
                             let modified = false;
@@ -2582,7 +2638,7 @@ ${JSON.stringify(simplifiedList)}`;
         const aiExecuteBtn = overlay.querySelector('#ds-ai-execute-plan-btn');
         let pendingAiPlan = [];
         let aiCatAbortController = null;
-        
+
         if (aiCatAbortBtn) {
             aiCatAbortBtn.addEventListener('click', () => {
                 if (aiCatAbortController) {
@@ -2628,12 +2684,12 @@ ${JSON.stringify(items.map(s => {
                     const planProgressWrap = overlay.querySelector('#ds-progress-wrap-ai-plan');
                     const planProgressBar = overlay.querySelector('#ds-progress-bar-ai-plan');
                     const planProgressStatus = overlay.querySelector('#ds-progress-status-ai-plan');
-                    
+
                     let fakeProgressTimer = null;
                         if (planProgressWrap) {
                             planProgressWrap.style.display = 'block';
                             planProgressBar.style.width = '0%';
-                            
+
                             const loadingPhrases = [
                                 { t: 0, progress: 5, text: '正在构建神经连接，给您的 Agent 下达指令...' },
                                 { t: 2, progress: 15, text: 'Agent 已就绪，正在读取上下文并解析语义...' },
@@ -2644,16 +2700,16 @@ ${JSON.stringify(items.map(s => {
                                 { t: 22, progress: 80, text: '正在进行最后的规则对齐与冲突校验...' },
                                 { t: 26, progress: 92, text: '几乎完成！正在生成结构化整理方案...' }
                             ];
-                            
+
                             let startTime = Date.now();
                             let currentTargetProgress = 0;
                             let curProgress = 0;
-                            
+
                             if (planProgressStatus) planProgressStatus.textContent = loadingPhrases[0].text;
-                            
+
                             fakeProgressTimer = setInterval(() => {
                                 const elapsed = (Date.now() - startTime) / 1000;
-                                
+
                                 let activePhase = loadingPhrases[0];
                                 for (let i = loadingPhrases.length - 1; i >= 0; i--) {
                                     if (elapsed >= loadingPhrases[i].t) {
@@ -2668,15 +2724,15 @@ ${JSON.stringify(items.map(s => {
                                         break;
                                     }
                                 }
-                                
+
                                 currentTargetProgress = activePhase.progress;
-                                
+
                                 // Smooth spring-like animation towards target progress
                                 curProgress += (currentTargetProgress - curProgress) * 0.08;
                                 // Add slight jitter to simulate real work
                                 curProgress += Math.random() * 0.5;
                                 if (curProgress > 95) curProgress = 95;
-                                
+
                                 if (planProgressBar) planProgressBar.style.width = curProgress + '%';
                             }, 100);
                     }
@@ -2711,11 +2767,11 @@ ${JSON.stringify(items.map(s => {
                             if (errJson.error && errJson.error.message) errTxt = errJson.error.message;
                             else if (Array.isArray(errJson) && errJson[0]?.error?.message) errTxt = errJson[0].error.message;
                         } catch(_) {}
-                        
+
                         if (resp.status === 429) {
                             errTxt = '⚠️ 触发了大模型 API 的调用频率限制或免费额度已耗尽 (HTTP 429)。请检查 API 余额或等待冷却时间。';
                         }
-                        
+
                         throw new Error(`HTTP ${resp.status} - ${errTxt.substring(0, 200)}...`);
                     }
 
@@ -2723,7 +2779,7 @@ ${JSON.stringify(items.map(s => {
                     if (planProgressStatus) planProgressStatus.textContent = '✅ 接收到模型响应，正在解析结构化标签数据...';
                     const data = await resp.json();
                     let reply = data?.choices?.[0]?.message?.content || '[]';
-                    
+
                     const jsonMatch = reply.match(/\[[\s\S]*\]/);
                     if (jsonMatch) {
                         reply = jsonMatch[0];
@@ -3183,7 +3239,7 @@ ${JSON.stringify(items.map(s => {
             }));
 
             const tagsData = Array.from(tagMap.entries()).map(([name, color]) => ({name, color}));
-            
+
             const renderChips = (container, isLocal) => {
                 if(!container) return;
                 container.innerHTML = '';
@@ -3191,7 +3247,7 @@ ${JSON.stringify(items.map(s => {
                     container.innerHTML = '<span style="font-size:11px; color:#94a3b8;">暂无标签数据</span>';
                     return;
                 }
-                
+
                 tagsData.forEach(t => {
                     const chip = document.createElement('span');
                     chip.style.cssText = `padding:4px 12px; border-radius:14px; background:${t.color}; color:#fff; font-size:11px; font-weight:500; cursor:pointer; opacity:0.8; transition:all 0.2s; user-select:none; display:inline-block; box-shadow:0 1px 3px rgba(0,0,0,0.12);`;
@@ -3201,27 +3257,27 @@ ${JSON.stringify(items.map(s => {
                     chip.onclick = () => {
                         chip.style.transform = 'scale(0.92)';
                         setTimeout(() => chip.style.transform = 'scale(1)', 100);
-                        
+
                         const paneSelector = isLocal ? '#ds-local-pane' : '#ds-ai-pane';
                         const cbs = document.querySelectorAll(`${paneSelector} .ds-session-cb`);
-                        
+
                         // 智能全选检测：如果当前列表的所有项都是选中状态，则此时点击标签为“排他性单选”
                         const allCheckedGlobally = cbs.length > 0 && Array.from(cbs).every(cb => cb.checked);
                         if (allCheckedGlobally) {
                             cbs.forEach(cb => cb.checked = false);
                         }
-                        
+
                         // 多选反转逻辑
                         const targetCbs = Array.from(cbs).filter(cb => {
                             const sessionTags = window.__dsLocalTags[cb.value] || [];
                             return sessionTags.some(tag => tag.name === t.name);
                         });
-                        
+
                         if (targetCbs.length > 0) {
                             const allChecked = targetCbs.every(cb => cb.checked);
                             targetCbs.forEach(cb => cb.checked = !allChecked);
                         }
-                        
+
                         if (isLocal) updateSelectAllState();
                         else if (typeof updateSelectAllStateAi === 'function') updateSelectAllStateAi();
                         if (window.__dsUpdateExportPane) window.__dsUpdateExportPane();
@@ -3229,10 +3285,10 @@ ${JSON.stringify(items.map(s => {
                     container.appendChild(chip);
                 });
             };
-            
+
             renderChips(cont, true);
         };
-        
+
         const _origSaveTags = window.saveTags;
         window.saveTags = function() { if(_origSaveTags) _origSaveTags(); if(window.__dsSyncTagUI) window.__dsSyncTagUI(); };
         setTimeout(() => { if(window.__dsSyncTagUI) window.__dsSyncTagUI(); }, 100);
@@ -3262,14 +3318,14 @@ ${JSON.stringify(items.map(s => {
             } else {
                 tags = JSON.parse(localStorage.getItem('ds_global_tags') || '[]');
             }
-            
+
             localStorage.setItem('ds_global_tags', JSON.stringify(tags));
-            
+
             const globalTagsPool = document.getElementById('ds-global-tags-pool');
             const tagSearchInp = document.getElementById('ds-tag-search-inp');
             const bulkTagNameInput = document.getElementById('ds-bulk-tag-name');
             const bulkTagColorSelect = document.getElementById('ds-bulk-tag-color');
-            
+
             if (globalTagsPool) {
                 renderGlobalTags(globalTagsPool, (name, color) => {
                     if (bulkTagNameInput) bulkTagNameInput.value = name;
