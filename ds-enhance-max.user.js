@@ -880,6 +880,7 @@
                                 ⚠️ 请先在「① 本地历史记录基准」中同步历史数据，AI 才有内容可检索。
                             </div>
                             <div class="ds-action-group" style="border:none; padding:8px 0 4px 0; background:transparent;">
+                                <select id="ds-ai-search-mode" style="padding:8px; border-radius:10px; border:1px solid #cbd5e1; outline:none; background:#f8fafc; color:#1e293b; font-size:13px; font-weight:600; cursor:pointer;" title="极速: 仅提权，响应快&#10;深度: 提权 + 互联网嘴替吐槽，稍微耗时"><option value="fast">⚡ 极速</option><option value="deep">🧠 深度(吐槽)</option></select>
                                 <input type="text" id="ds-ai-search-keyword" placeholder="可以试着说：找出你认为可能成为黑历史的对话..." style="flex:1;" />
                                 <button class="ds-btn ds-btn-sync" id="ds-ai-search-btn" style="background:linear-gradient(90deg, #10b981, #059669);">下令</button>
                                 <button class="ds-btn" id="ds-ai-abort-btn" style="display:none; background:#ef4444; color:#fff; padding:9px 14px;">中止</button>
@@ -1579,6 +1580,13 @@
 待匹配数据：
 ${JSON.stringify(simplifiedList)}`;
 
+                let aiFetchTimeout = setTimeout(() => {
+                    if (aiAbortController) {
+                        aiAbortController.abort();
+                        const stElSearch = document.getElementById('ds-ai-search-status-text');
+                        if(stElSearch) { stElSearch.style.display = 'block'; stElSearch.textContent = '🛑 AI 检索超时（超过 60 秒未响应），已自动中止。'; }
+                    }
+                }, 60000);
                 const resp = await fetch(conf.url, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${conf.key}` },
