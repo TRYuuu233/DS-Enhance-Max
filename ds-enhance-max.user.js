@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         DS Enhance Max (满血版) [适用最新DeepSeek网页]
 // @namespace    https://chat.deepseek.com/
-// @version      8.0.0
+// @version      8.0.3
 // @description  【满血升级】突破原生限制！支持 AI 智能会话搜索、AI 自动化标签整理、多大模型 API 自由切换、原生隔离级批量管理。集成批量删除、导出、自定义提示词以及批量FORK等满血增强功能。
 // @author       TRYuuu
 // @license      MIT
