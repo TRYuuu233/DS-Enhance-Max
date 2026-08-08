@@ -1560,8 +1560,10 @@
 请根据用户的需求，从下方的 JSON 数组中挑选出所有语义相关的对话记录。
 用户需求："${query}"
 
-只返回符合条件的对象的 id 组成的纯 JSON 数组，例如：["id1", "id2"]。
-不要返回 markdown 代码块标记，不要返回解释性文字，只输出合法的 JSON 数组结构。
+请返回一个 JSON 对象，包含两个字段：
+1. "ids": 纯 JSON 数组，包含符合条件的对象的 id，例如：["id1", "id2"]。如果没有符合条件的，返回空数组 []。
+2. "snarky_remark": 一句简短、精炼、一针见血的吐槽（评价一下用户的这个搜索需求或者他过去的这些对话内容）。
+返回纯 JSON 对象，不要返回 markdown 代码块标记，不要返回额外解释性文字，只输出合法的 JSON 结构。
 
 待匹配数据：
 ${JSON.stringify(simplifiedList)}`;
@@ -1579,20 +1581,24 @@ ${JSON.stringify(simplifiedList)}`;
                 const data = await resp.json();
                 let reply = data?.choices?.[0]?.message?.content || '[]';
 
-                // 清理大模型可能输出的多余标记，增强正则提取
-                const jsonMatch = reply.match(/\[[\s\S]*\]/);
-                if (jsonMatch) {
-                    reply = jsonMatch[0];
-                } else {
-                    reply = reply.replace(/^```(json)?[\n]?/i, '').replace(/[\n]?```$/i, '').trim();
-                }
-
+                // 解析大模型的返回结果
                 let matchedIds = [];
-                try {
-                    matchedIds = JSON.parse(reply);
-                    if (!Array.isArray(matchedIds)) throw new Error('解析结果不是数组');
-                } catch(e) {
-                    throw new Error('大模型未按规范输出纯 JSON 数组。尝试提取的内容: \n' + reply.substring(0, 100) + '...');
+                let snarky = '';
+                const jsonMatch = reply.match(/\{[\s\S]*\}/);
+                if (jsonMatch) {
+                    try {
+                        const parsed = JSON.parse(jsonMatch[0]);
+                        matchedIds = parsed.ids || [];
+                        snarky = parsed.snarky_remark || '';
+                    } catch (e) {
+                        throw new Error('解析 JSON 失败: ' + e.message);
+                    }
+                } else {
+                    // Fallback to array if model ignored instructions
+                    const arrMatch = reply.match(/\[[\s\S]*\]/);
+                    if (arrMatch) {
+                        try { matchedIds = JSON.parse(arrMatch[0]); } catch(e){}
+                    }
                 }
 
                 
