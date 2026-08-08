@@ -1466,15 +1466,21 @@
         });
 
         aiSearchBtn.addEventListener('click', async () => {
+            const stElSearch = document.getElementById('ds-ai-search-status-text');
+            if (stElSearch) { stElSearch.style.display = 'block'; stElSearch.textContent = ''; }
+            const snarkyBox = document.getElementById('ds-ai-snarky-box-search');
+            if (snarkyBox) snarkyBox.style.display = 'none';
+            const showAiStatus = (msg) => { if(stElSearch) { stElSearch.style.display = 'block'; stElSearch.textContent = msg; } else { setStatus(msg); } };
+
             // 开始AI检索前自动清空之前所有隐藏或可见的勾选
             document.querySelectorAll('#ds-ai-pane .ds-session-cb:checked').forEach(cb => cb.checked = false);
             if (typeof updateSelectAllStateAi === 'function') updateSelectAllStateAi();
             const query = aiSearchKeywordInput.value.trim();
-            if (!query) { setStatus('⚠️ 请输入你想让 AI 帮你找的自然语言描述'); return; }
+            if (!query) { showAiStatus('⚠️ 请输入你想让 AI 帮你找的自然语言描述'); return; }
 
             if (!window.__dsCachedSessions || window.__dsCachedSessions.length === 0) {
                 aiSearchHint.style.display = 'block';
-                setStatus('⚠️ 请先在左侧点击【同步所有历史】，获取本地数据后才能让 AI 帮你筛选！');
+                showAiStatus('⚠️ 请先在左侧点击【同步所有历史】，获取本地数据后才能让 AI 帮你筛选！');
                 return;
             }
             aiSearchHint.style.display = 'none';
@@ -1487,7 +1493,7 @@
             // 获取配置
             let conf = window.__dsGetActiveAIConfig ? window.__dsGetActiveAIConfig() : {};
             if (!conf.url || !conf.key || !conf.model) {
-                setStatus('⚠️ 请先在 Tab 5「大模型神经中枢」面板中配置并激活好 API！');
+                showAiStatus('⚠️ 请先在 Tab 5「大模型神经中枢」面板中配置并激活好 API！');
                 return;
             }
 
@@ -1617,8 +1623,8 @@ ${JSON.stringify(simplifiedList)}`;
                 renderResultList(matchedSessions, resultListAi, resultCountAi, selectAllCbAi);
                 
                 
-                // Restore standard status
-                setStatus(`✨ AI 筛选完成！从 ${sourceData.length} 条数据中挑出了 ${matchedSessions.length} 条匹配记录。`);
+                // Final stats goes to local status
+                showAiStatus(`✨ AI 筛选完成！从 ${sourceData.length} 条数据中挑出了 ${matchedSessions.length} 条匹配记录。`);
                 // Show snarky remark in the dedicated box
                 const aiSnarkyBoxSearch = document.getElementById('ds-ai-snarky-box-search');
                 if (aiSnarkyBoxSearch) {
