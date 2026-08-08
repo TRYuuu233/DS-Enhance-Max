@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         DS Enhance Max (满血版) [适用最新DeepSeek网页]
 // @namespace    https://chat.deepseek.com/
-// @version      8.0.3
+// @version      8.0.4
 // @description  【满血升级】突破原生限制！支持 AI 智能会话搜索、AI 自动化标签整理、多大模型 API 自由切换、原生隔离级批量管理。集成批量删除、导出、自定义提示词以及批量FORK等满血增强功能。
 // @author       TRYuuu
 // @license      MIT
@@ -630,8 +630,10 @@
             .ds-modal-confirm:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(59,130,246,0.5); }
 
             #ds-bulk-btn {
+                user-select: none;
+                touch-action: none;
                 position: fixed;
-                top: 16px;
+                top: 80px;
                 right: 16px;
                 z-index: 99999;
                 padding: 8px 16px;
@@ -1257,7 +1259,78 @@
         };
 
         // 打开/关闭
-        triggerBtn.addEventListener('click', () => {
+        
+        let isDraggingBtn = false;
+        let startX, startY, startLeft, startTop;
+
+        try {
+            const pos = JSON.parse(localStorage.getItem('ds_btn_pos'));
+            if (pos && typeof pos.top === 'number' && typeof pos.left === 'number') {
+                triggerBtn.style.top = pos.top + 'px';
+                triggerBtn.style.left = pos.left + 'px';
+                triggerBtn.style.right = 'auto'; 
+            }
+        } catch(e){}
+
+        triggerBtn.addEventListener('mousedown', (e) => {
+            if (e.button !== 0) return; // Only left click
+            isDraggingBtn = false;
+            startX = e.clientX;
+            startY = e.clientY;
+            const rect = triggerBtn.getBoundingClientRect();
+            startLeft = rect.left;
+            startTop = rect.top;
+            
+            // Immediately apply fixed px left/top and remove right pinning for smooth dragging
+            triggerBtn.style.right = 'auto'; 
+            triggerBtn.style.left = startLeft + 'px';
+            triggerBtn.style.top = startTop + 'px';
+            triggerBtn.style.transition = 'none'; // Prevent jitter when dragging
+            
+            const onMouseMove = (moveEvent) => {
+                const dx = moveEvent.clientX - startX;
+                const dy = moveEvent.clientY - startY;
+                if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
+                    isDraggingBtn = true;
+                }
+                if (isDraggingBtn) {
+                    let newLeft = startLeft + dx;
+                    let newTop = startTop + dy;
+                    
+                    const maxLeft = window.innerWidth - rect.width;
+                    const maxTop = window.innerHeight - rect.height;
+                    newLeft = Math.max(0, Math.min(newLeft, maxLeft));
+                    newTop = Math.max(0, Math.min(newTop, maxTop));
+                    
+                    triggerBtn.style.left = newLeft + 'px';
+                    triggerBtn.style.top = newTop + 'px';
+                }
+            };
+            
+            const onMouseUp = () => {
+                triggerBtn.style.transition = 'all 0.2s ease';
+                document.removeEventListener('mousemove', onMouseMove);
+                document.removeEventListener('mouseup', onMouseUp);
+                if (isDraggingBtn) {
+                    try {
+                        localStorage.setItem('ds_btn_pos', JSON.stringify({
+                            left: parseInt(triggerBtn.style.left),
+                            top: parseInt(triggerBtn.style.top)
+                        }));
+                    } catch(err){}
+                }
+            };
+            
+            document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('mouseup', onMouseUp);
+        });
+
+        triggerBtn.addEventListener('click', (e) => {
+            if (isDraggingBtn) {
+                e.preventDefault();
+                e.stopPropagation();
+                return;
+            }
             overlay.style.display = 'block';
             if (window.__dsCachedSessions.length > 0) {
                 setStatus(`已从本地缓存加载 ${window.__dsCachedSessions.length} 条记录`);

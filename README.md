@@ -4,7 +4,7 @@
 
 **突破原生限制！为 DeepSeek 注入灵魂的高阶增强套件**
 
-[![Version](https://img.shields.io/badge/version-v8.0.3-blue.svg?style=for-the-badge&logo=github)](#)
+[![Version](https://img.shields.io/badge/version-v8.0.4-blue.svg?style=for-the-badge&logo=github)](#)
 [![License](https://img.shields.io/badge/license-MIT-green.svg?style=for-the-badge)](#)
 [![Platform](https://img.shields.io/badge/platform-Tampermonkey-orange.svg?style=for-the-badge&logo=tampermonkey)](#)
 
