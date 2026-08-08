@@ -1562,7 +1562,11 @@
 
 请返回一个 JSON 对象，包含两个字段：
 1. "ids": 纯 JSON 数组，包含符合条件的对象的 id，例如：["id1", "id2"]。如果没有符合条件的，返回空数组 []。
-2. "snarky_remark": 一句简短、精炼、一针见血的吐槽（评价一下用户的这个搜索需求或者他过去的这些对话内容）。
+2. "snarky_remark": 请扮演用户的“互联网嘴替”损友，对用户的这些对话内容或搜索需求进行无情吐槽。
+要求：
+- 【风格】使用当下中文互联网最高频的社交黑话，拥抱“发疯文学”或“乐子人”语感，拒绝书面语。
+- 【结构】前半段（捧哏）：用两个短句列举用户行为中最荒诞的反差或冲突点；后半段（逗哏）：用一句极短、带惊叹号或互联网语气词（如“绷！”、“绝杀！”、“太典了”）神转折收尾。
+- 【限制】严格控制在35字以内。字数越少，冲击力越强。不要客观中立，要展现互相伤害但不翻脸的喜剧感。
 返回纯 JSON 对象，不要返回 markdown 代码块标记，不要返回额外解释性文字，只输出合法的 JSON 结构。
 
 待匹配数据：
@@ -1612,7 +1616,20 @@ ${JSON.stringify(simplifiedList)}`;
                 const matchedSessions = sourceData.filter(s => matchedIds.includes(s.id));
                 renderResultList(matchedSessions, resultListAi, resultCountAi, selectAllCbAi);
                 
-                setStatus(snarky ? '吐槽：' + snarky : `✨ AI 筛选完成！从 ${sourceData.length} 条数据中挑出了 ${matchedSessions.length} 条匹配记录。`);
+                
+                // Restore standard status
+                setStatus(`✨ AI 筛选完成！从 ${sourceData.length} 条数据中挑出了 ${matchedSessions.length} 条匹配记录。`);
+                // Show snarky remark in the dedicated box
+                const aiSnarkyBoxSearch = document.getElementById('ds-ai-snarky-box-search');
+                if (aiSnarkyBoxSearch) {
+                    if (snarky) {
+                        aiSnarkyBoxSearch.textContent = '吐槽：' + snarky;
+                        aiSnarkyBoxSearch.style.display = 'block';
+                    } else {
+                        aiSnarkyBoxSearch.style.display = 'none';
+                    }
+                }
+
 
 
             } catch(e) {
