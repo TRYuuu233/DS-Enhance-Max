@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         DS Enhance Max (满血版) [适用最新DeepSeek网页]
 // @namespace    https://chat.deepseek.com/
-// @version      8.0.4
+// @version      8.0.5
 // @description  【满血升级】突破原生限制！支持 AI 智能会话搜索、AI 自动化标签整理、多大模型 API 自由切换、原生隔离级批量管理。集成批量删除、导出、自定义提示词以及批量FORK等满血增强功能。
 // @author       TRYuuu
 // @license      MIT
@@ -873,7 +873,7 @@
                         <!-- 第三栏：大模型语义检索 -->
                         <div id="ds-ai-pane" class="ds-pane">
                             <div class="ds-pane-header" style="display:flex; justify-content:space-between;">
-                                <span>② 智能会话管家</span>
+                                <span>② 全能会话管家</span>
                                 <span style="font-size:12px; font-weight:normal; color:#10b981;">需在「大模型神经中枢」配置模型</span>
                             </div>
                             <div id="ds-ai-search-hint" style="font-size:12px; color:#f59e0b; background:#fffbeb; border:1px solid #fde68a; border-radius:8px; padding:8px 12px; margin-bottom:8px; display:none;">
@@ -1072,7 +1072,7 @@
                     <div class="ds-action-group" style="display:flex; gap:10px; align-items:center;">
                         <button class="ds-btn ds-btn-sync" id="ds-rule-run-btn" style="background:#10b981;">运行本地规则自动打标</button>
                         <span style="font-size:12px; color:#64748b; margin-left:auto;">或让 AI 帮您批量打标 </span>
-                        <button class="ds-btn ds-btn-sync" id="ds-ai-categorize-btn" style="background:linear-gradient(135deg, #3b82f6, #6366f1); box-shadow:0 4px 14px rgba(59,130,246,0.3); border:none; transition:all 0.3s;">AI 智能整理 (应用于已选会话)</button>
+                        <button class="ds-btn ds-btn-sync" id="ds-ai-categorize-btn" style="background:linear-gradient(135deg, #3b82f6, #6366f1); box-shadow:0 4px 14px rgba(59,130,246,0.3); border:none; transition:all 0.3s;">AI 全能整理 (应用于已选会话)</button>
                         <button class="ds-btn" id="ds-ai-categorize-abort-btn" style="display:none; background:#ef4444; color:#fff; padding:9px 14px;">中止</button>
                     </div>
 
@@ -1085,6 +1085,7 @@
                     </div>
                     <div id="ds-ai-categorize-preview" style="display:none; margin-top:12px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:12px;">
                         <div style="font-size:13px; font-weight:600; color:#1e293b; margin-bottom:8px;">AI 整理计划预览</div>
+                        <div id="ds-ai-snarky-box" style="margin-bottom:12px; font-size:12px; color:#6366f1; background:#eef2ff; padding:8px 12px; border-radius:6px; border-left:3px solid #6366f1; font-style:italic; display:none;"></div>
                         <div id="ds-ai-preview-list" style="max-height:200px; overflow-y:auto; font-size:12px; color:#475569; display:flex; flex-direction:column; gap:4px; margin-bottom:12px; border:1px solid #cbd5e1; padding:6px; border-radius:4px; background:#fff;"></div>
                         <div style="display:flex; justify-content:flex-end; gap:8px;">
                             <button class="ds-btn ds-btn-close" id="ds-ai-cancel-plan-btn">取消</button>
@@ -1493,9 +1494,50 @@
             aiSearchBtn.style.display = 'none';
             aiAbortBtn.style.display = '';
             lockUI(true);
-            progressBarAi.style.width = '10%';
+            
+            let fakeProgressTimerAi = null;
+            if (progressBarAi) {
+                progressBarAi.style.width = '0%';
+                const loadingPhrases = [
+                    { t: 0, progress: 5, text: '正在向神经中枢注入搜索关键词...' },
+                    { t: 1, progress: 15, text: '正在组装本地全量对话切片...' },
+                    { t: 3, progress: 30, text: '大模型正在高维空间进行语义匹配...' },
+                    { t: 7, progress: 50, text: '数据有点多，正在过滤无关上下文...' },
+                    { t: 11, progress: 65, text: '提取到了疑似目标，正在校验相关性...' },
+                    { t: 15, progress: 85, text: '几近完成，正在封装 JSON 结果...' }
+                ];
+                let startTime = Date.now();
+                let currentTargetProgress = 0;
+                let curProgress = 0;
+                
+                setStatus(loadingPhrases[0].text);
+                
+                fakeProgressTimerAi = setInterval(() => {
+                    const elapsed = (Date.now() - startTime) / 1000;
+                    let activePhase = loadingPhrases[0];
+                    for (let i = loadingPhrases.length - 1; i >= 0; i--) {
+                        if (elapsed >= loadingPhrases[i].t) {
+                            activePhase = loadingPhrases[i];
+                            if (statusEl.textContent !== activePhase.text) {
+                                statusEl.style.opacity = '0';
+                                setTimeout(() => {
+                                    setStatus(activePhase.text);
+                                    statusEl.style.opacity = '1';
+                                }, 200);
+                            }
+                            break;
+                        }
+                    }
+                    currentTargetProgress = activePhase.progress;
+                    curProgress += (currentTargetProgress - curProgress) * 0.08;
+                    curProgress += Math.random() * 0.5;
+                    if (curProgress > 95) curProgress = 95;
+                    progressBarAi.style.width = curProgress + '%';
+                }, 100);
+            }
+
             const total = Math.min(window.__dsCachedSessions.length, 2000);
-            setStatus(`正在组装 ${total} 条对话摘要并发送给大模型推理筛选...`);
+            
 
             aiAbortController = new AbortController();
             try {
@@ -1527,7 +1569,7 @@ ${JSON.stringify(simplifiedList)}`;
                     signal: aiAbortController.signal
                 });
 
-                progressBarAi.style.width = '70%';
+                
 
                 if (!resp.ok) throw new Error(`HTTP ${resp.status} - ${resp.statusText}`);
                 const data = await resp.json();
@@ -1549,7 +1591,10 @@ ${JSON.stringify(simplifiedList)}`;
                     throw new Error('大模型未按规范输出纯 JSON 数组。尝试提取的内容: \n' + reply.substring(0, 100) + '...');
                 }
 
-                progressBarAi.style.width = '100%';
+                
+                if (typeof fakeProgressTimerAi !== 'undefined' && fakeProgressTimerAi) clearInterval(fakeProgressTimerAi);
+                if (progressBarAi) progressBarAi.style.width = '100%';
+
                 const matchedSessions = sourceData.filter(s => matchedIds.includes(s.id));
                 renderResultList(matchedSessions, resultListAi, resultCountAi, selectAllCbAi);
                 setStatus(`✨ AI 筛选完成！从 ${sourceData.length} 条数据中挑出了 ${matchedSessions.length} 条匹配记录。`);
@@ -1900,7 +1945,7 @@ ${JSON.stringify(simplifiedList)}`;
             saveCache();
             renderResultList(window.__dsCachedSessions, resultList, resultCount, selectAllCb);
 
-            dsAlert(`成功销毁 ${successCount} 个会话。`);
+            dsAlert(`成功销毁 ${successCount} 个会话。`); setTimeout(() => window.location.reload(), 1000);
             lockUI(false);
         });
 
@@ -2648,7 +2693,7 @@ ${JSON.stringify(items.map(s => {
 
                     setTimeout(() => {
                         if (aiCatBtn.textContent === '✅ 计划已生成，请向下滚动查看') {
-                            aiCatBtn.textContent = 'AI 智能整理 (应用于已选会话)';
+                            aiCatBtn.textContent = 'AI 全能整理 (应用于已选会话)';
                             aiCatBtn.style.background = oldBg;
                         }
                     }, 4000);
@@ -2668,7 +2713,7 @@ ${JSON.stringify(items.map(s => {
                         aiCatBtn.style.display = 'block';
                     }
                     if (pendingAiPlan.length === 0) {
-                        aiCatBtn.textContent = 'AI 智能整理 (应用于已选会话)';
+                        aiCatBtn.textContent = 'AI 全能整理 (应用于已选会话)';
                     }
                     aiCatBtn.disabled = false;
                     lockUI(false);
