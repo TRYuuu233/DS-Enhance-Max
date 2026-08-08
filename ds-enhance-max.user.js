@@ -835,7 +835,7 @@
                             <div class="ds-action-group" style="border:none; padding:8px 0; background:transparent;">
                                 <button class="ds-btn ds-btn-sync" id="ds-sync-btn">同步所有历史</button>
                                 <button class="ds-btn ds-btn-clear" id="ds-clear-btn" style="padding:9px 12px;">清空</button>
-                                <span id="ds-status" style="margin-left:auto; font-size:12px; align-self:center;">等待操作...</span>
+                                <div style="width:100%;"><span id="ds-status" style="display:block; font-size:12px; color:#475569; margin-top:8px; line-height:1.4;">等待操作...</span></div>
                             </div>
                             <div class="ds-action-group" style="border:none; padding:0 0 8px 0; background:transparent;">
                                 <input type="text" id="ds-keyword" placeholder="搜索标题..." style="flex:1;" />
@@ -885,6 +885,7 @@
                                 <button class="ds-btn" id="ds-ai-abort-btn" style="display:none; background:#ef4444; color:#fff; padding:9px 14px;">中止</button>
                             </div>
 
+                            <div id="ds-ai-search-status-text" style="font-size:11px; color:#64748b; font-family:monospace; font-weight:600; margin-top:12px; transition:opacity 0.2s;"></div>
                             <div id="ds-progress-wrap-ai" style="height:6px; background:#f1f5f9; border-radius:3px; margin-bottom:14px; overflow:hidden; margin-top:12px;">
                                 <div id="ds-progress-bar-ai" style="height:100%; width:0%; background:linear-gradient(90deg, #10b981, #34d399); transition:width 0.3s ease;"></div>
                             </div>
@@ -1510,7 +1511,7 @@
                 let currentTargetProgress = 0;
                 let curProgress = 0;
                 
-                setStatus(loadingPhrases[0].text);
+                const stEl4 = document.getElementById('ds-ai-search-status-text'); if(stEl4) stEl4.textContent = loadingPhrases[0].text;
                 
                 fakeProgressTimerAi = setInterval(() => {
                     const elapsed = (Date.now() - startTime) / 1000;
@@ -1518,11 +1519,14 @@
                     for (let i = loadingPhrases.length - 1; i >= 0; i--) {
                         if (elapsed >= loadingPhrases[i].t) {
                             activePhase = loadingPhrases[i];
-                            if (statusEl.textContent !== activePhase.text) {
-                                statusEl.style.opacity = '0';
+                            if (document.getElementById('ds-ai-search-status-text')?.textContent !== activePhase.text) {
+                                const stEl2 = document.getElementById('ds-ai-search-status-text'); if(stEl2) stEl2.style.opacity = '0';
                                 setTimeout(() => {
-                                    setStatus(activePhase.text);
-                                    statusEl.style.opacity = '1';
+                                    
+                                    const stEl = document.getElementById('ds-ai-search-status-text');
+                                    if(stEl) stEl.textContent = activePhase.text;
+
+                                    const stEl3 = document.getElementById('ds-ai-search-status-text'); if(stEl3) stEl3.style.opacity = '1';
                                 }, 200);
                             }
                             break;
@@ -1593,11 +1597,17 @@ ${JSON.stringify(simplifiedList)}`;
 
                 
                 if (typeof fakeProgressTimerAi !== 'undefined' && fakeProgressTimerAi) clearInterval(fakeProgressTimerAi);
+                
                 if (progressBarAi) progressBarAi.style.width = '100%';
+                const stElFinal = document.getElementById('ds-ai-search-status-text');
+                if(stElFinal) stElFinal.style.display = 'none';
+
 
                 const matchedSessions = sourceData.filter(s => matchedIds.includes(s.id));
                 renderResultList(matchedSessions, resultListAi, resultCountAi, selectAllCbAi);
-                setStatus(`✨ AI 筛选完成！从 ${sourceData.length} 条数据中挑出了 ${matchedSessions.length} 条匹配记录。`);
+                
+                setStatus(snarky ? '吐槽：' + snarky : `✨ AI 筛选完成！从 ${sourceData.length} 条数据中挑出了 ${matchedSessions.length} 条匹配记录。`);
+
 
             } catch(e) {
                 if (e.name === 'AbortError') {
@@ -1945,7 +1955,32 @@ ${JSON.stringify(simplifiedList)}`;
             saveCache();
             renderResultList(window.__dsCachedSessions, resultList, resultCount, selectAllCb);
 
-            dsAlert(`成功销毁 ${successCount} 个会话。`); setTimeout(() => window.location.reload(), 1000);
+            dsAlert(`成功销毁 ${successCount} 个会话。`); 
+                // 刷新插件数据
+                if (successCount > 0) {
+                    // 从缓存中删除
+                    const deletedIds = deletedLog.map(log => log.id);
+                    window.__dsCachedSessions = window.__dsCachedSessions.filter(s => !deletedIds.includes(s.id));
+                    saveCache();
+                    
+                    // 重新渲染当前列表（如果是 AI 搜索列表则重新渲染 AI 列表，否则渲染全部缓存）
+                    // 检查当前是不是在 AI 搜索面板
+                    const aiTab = document.getElementById('ds-tab-ai');
+                    if (aiTab && aiTab.classList.contains('active')) {
+                         const resultListAi = document.getElementById('ds-result-list-ai');
+                         const resultCountAi = document.getElementById('ds-result-count-ai');
+                         const selectAllCbAi = document.getElementById('ds-select-all-ai');
+                         // 过滤 matchedSessions
+                         if (typeof matchedSessions !== 'undefined') {
+                             matchedSessions = matchedSessions.filter(s => !deletedIds.includes(s.id));
+                             renderResultList(matchedSessions, resultListAi, resultCountAi, selectAllCbAi);
+                         }
+                    } else {
+                         matchedSessions = window.__dsCachedSessions;
+                         renderResultList(matchedSessions, resultList, resultCount, selectAllCb);
+                    }
+                }
+
             lockUI(false);
         });
 
