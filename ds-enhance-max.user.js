@@ -900,6 +900,7 @@
                                         </div>
                                     </div>
                                 </div>
+                                <div id="ds-ai-snarky-box-search" style="margin:8px 14px; font-size:12px; color:#6366f1; background:#eef2ff; padding:8px 12px; border-radius:6px; border-left:3px solid #6366f1; font-style:italic; font-weight:bold; display:none;"></div>
                                 <div class="ds-result-list" id="ds-result-list-ai">
                                     <div class="ds-empty-msg">输入语义需求并点击，AI 将为您精准勾选</div>
                                 </div>
