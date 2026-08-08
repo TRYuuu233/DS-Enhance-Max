@@ -1,11 +1,12 @@
 // ==UserScript==
-// @name         DS Enhance Max (全能满血版)
+// @name         DS Enhance Max (满血版) [适用最新DeepSeek网页]
 // @namespace    https://chat.deepseek.com/
-// @version      7.0.2
+// @version      8.0.0
 // @description  【满血升级】突破原生限制！支持 AI 智能会话搜索、AI 自动化标签整理、多大模型 API 自由切换、原生隔离级批量管理。集成批量删除、导出、自定义提示词以及批量FORK等满血增强功能。
 // @author       TRYuuu
 // @license      MIT
 // @match        *://chat.deepseek.com/*
+// @icon         https://fe-static.deepseek.com/chat/favicon.svg
 // @grant        none
 // @run-at       document-start
 // ==/UserScript==
@@ -204,7 +205,15 @@
             return new Promise((resolve) => {
                 const overlay = document.createElement('div');
                 overlay.className = 'ds-modal-overlay';
-                overlay.innerHTML = `
+                
+        overlay.addEventListener('click', (e) => {
+            // Prevent DeepSeek's global document click handler from crashing
+            if (e.target && (e.target.tagName === 'svg' || e.target.tagName === 'path' || e.target.closest('.ds-tab-btn'))) {
+                e.stopPropagation();
+            }
+        }, true);
+
+        overlay.innerHTML = `
                     <div class="ds-modal-box">
                         <h3 class="ds-modal-title">${title}</h3>
                         <div class="ds-modal-content">${msg}</div>
@@ -610,7 +619,7 @@
             @keyframes ds-toast-out { from { transform: translateY(0); opacity: 1; } to { transform: translateY(-20px); opacity: 0; } }
             
             .ds-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 2147483647; display: flex; justify-content: center; align-items: center; animation: ds-fadeIn 0.2s ease; pointer-events: auto; }
-            .ds-modal-box { background: #ffffff; padding: 28px 32px; border-radius: 20px; box-shadow: 0 24px 60px rgba(0,0,0,0.3); max-width: 480px; width: 90%; animation: ds-slideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); pointer-events: auto; }
+            .ds-modal-box { box-sizing: border-box; background: #ffffff; padding: 28px 32px; border-radius: 20px; box-shadow: 0 24px 60px rgba(0,0,0,0.3); max-width: 480px; width: 90%; animation: ds-slideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); pointer-events: auto; }
             .ds-modal-title { margin: 0 0 14px; font-size: 17px; font-weight: 700; color: #0f172a; }
             .ds-modal-content { font-size: 14px; color: #475569; margin-bottom: 28px; line-height: 1.7; word-break: break-word; overflow-wrap: break-word; white-space: pre-wrap; }
             .ds-modal-actions { display: flex; justify-content: flex-end; gap: 12px; }
@@ -797,6 +806,7 @@
         // 遮罩层 + 弹窗
         const overlay = document.createElement('div');
         overlay.id = 'ds-bulk-overlay';
+        overlay.addEventListener('click', (e) => e.stopPropagation());
 
         overlay.innerHTML = `
             <div id="ds-bulk-modal">
@@ -1060,15 +1070,15 @@
                     <div class="ds-action-group" style="display:flex; gap:10px; align-items:center;">
                         <button class="ds-btn ds-btn-sync" id="ds-rule-run-btn" style="background:#10b981;">▶ 运行本地规则自动打标</button>
                         <span style="font-size:12px; color:#64748b; margin-left:auto;">或让 AI 帮您批量打标 👉</span>
-                        <button class="ds-btn ds-btn-sync" id="ds-ai-categorize-btn" style="background:#8b5cf6;">AI 智能整理 (应用于已选会话)</button>
+                        <button class="ds-btn ds-btn-sync" id="ds-ai-categorize-btn" style="background:linear-gradient(135deg, #3b82f6, #6366f1); box-shadow:0 4px 14px rgba(59,130,246,0.3); border:none; transition:all 0.3s;">AI 智能整理 (应用于已选会话)</button>
                         <button class="ds-btn" id="ds-ai-categorize-abort-btn" style="display:none; background:#ef4444; color:#fff; padding:9px 14px;">⏹ 中止</button>
                     </div>
 
                     <!-- AI 分类预览区 -->
                     <div id="ds-progress-wrap-ai-plan" style="margin-top:12px; margin-bottom:0px; display:none;">
-                        <div id="ds-progress-status-ai-plan" style="font-size:11px; color:#64748b; margin-bottom:6px; font-family:monospace; font-weight:600;">正在启动 AI 神经中枢...</div>
+                        <div id="ds-progress-status-ai-plan" style="transition: opacity 0.15s ease;" style="font-size:11px; color:#64748b; margin-bottom:6px; font-family:monospace; font-weight:600;">正在启动 AI 神经中枢...</div>
                         <div style="height:6px; background:#f1f5f9; border-radius:3px; overflow:hidden;">
-                            <div id="ds-progress-bar-ai-plan" style="height:100%; width:0%; background:linear-gradient(90deg, #8b5cf6, #c084fc); transition:width 0.3s ease;"></div>
+                            <div id="ds-progress-bar-ai-plan" style="height:100%; width:0%; background:linear-gradient(90deg, #3b82f6, #6366f1); box-shadow: 0 0 10px rgba(59,130,246,0.5); transition:width 0.3s ease;"></div>
                         </div>
                     </div>
                     <div id="ds-ai-categorize-preview" style="display:none; margin-top:12px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:12px;">
@@ -1161,9 +1171,9 @@
                             <div style="width:80px; height:80px; border-radius:50%; background:linear-gradient(135deg, #3b82f6, #8b5cf6); display:flex; justify-content:center; align-items:center; color:#fff; font-size:32px; font-weight:bold; margin-bottom:8px; box-shadow:0 8px 20px rgba(139,92,246,0.3);">T</div>
                             <div style="font-size:18px; font-weight:700; color:#0f172a;">开发者: TRYuuu</div>
                             
-                            <a href="https://github.com/TRYuuu233" target="_blank" style="display:flex; align-items:center; gap:8px; text-decoration:none; color:#475569; font-size:14px; padding:8px 16px; background:#fff; border:1px solid #cbd5e1; border-radius:20px; transition:all 0.2s; box-shadow:0 2px 4px rgba(0,0,0,0.02);" onmouseover="this.style.borderColor='#3b82f6'; this.style.color='#3b82f6'" onmouseout="this.style.borderColor='#cbd5e1'; this.style.color='#475569'">
+                            <a href="https://github.com/TRYuuu233/DS-Enhance-Max" target="_blank" style="display:flex; align-items:center; gap:8px; text-decoration:none; color:#475569; font-size:14px; padding:8px 16px; background:#fff; border:1px solid #cbd5e1; border-radius:20px; transition:all 0.2s; box-shadow:0 2px 4px rgba(0,0,0,0.02);" onmouseover="this.style.borderColor='#3b82f6'; this.style.color='#3b82f6'" onmouseout="this.style.borderColor='#cbd5e1'; this.style.color='#475569'">
                                 <svg height="16" width="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path></svg>
-                                GitHub: TRYuuu233
+                                GitHub 项目主页
                             </a>
                             
                             <a href="https://tryuuu.netlify.app/" target="_blank" style="display:flex; align-items:center; gap:8px; text-decoration:none; color:#fff; font-size:14px; padding:10px 24px; background:linear-gradient(90deg, #10b981, #059669); border-radius:24px; font-weight:600; margin-top:8px; transition:all 0.2s; box-shadow:0 4px 12px rgba(16,185,129,0.3);" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(16,185,129,0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(16,185,129,0.3)'">
@@ -1726,7 +1736,8 @@ ${JSON.stringify(simplifiedList)}`;
                     panel.querySelector('[data-color="#3b82f6"]').style.border = '2px solid #334155';
 
                     panel.querySelectorAll('[data-del]').forEach(btn => {
-                        btn.addEventListener('click', () => {
+                        btn.addEventListener('click', (e) => {
+                e.stopPropagation();
                             if (!tagsMap[sid]) return;
                             tagsMap[sid].splice(parseInt(btn.dataset.del), 1);
                             saveAndRefresh();
@@ -1795,72 +1806,36 @@ ${JSON.stringify(simplifiedList)}`;
             });
             const uniqueCbs = Array.from(uniqueSessions.values());
 
-            const confirmed = confirm(
-                `即将永久删除 ${uniqueCbs.length} 个不重复的会话！\n\n删除后无法恢复，确定继续？`
-            );
+            const confirmed = confirm(`确定要永久销毁选中的 ${uniqueCbs.length} 个会话吗？此操作不可恢复！`);
             if (!confirmed) return;
 
             lockUI(true);
-            setProgress(0);
-
             let successCount = 0;
-            let failCount = 0;
-
-            for (let i = 0; i < uniqueCbs.length; i++) {
-                const cb = uniqueCbs[i];
-                const sessionId = cb.value;
-                const itemDiv = cb.closest('.ds-result-item');
-                const titleSpan = itemDiv ? itemDiv.querySelector('.ds-session-title') : null;
-
+            const deletedIds = uniqueCbs.map(cb => cb.value);
+            for(let i=0; i<uniqueCbs.length; i++) {
+                const sId = uniqueCbs[i].value;
                 try {
-                    await apiPost(CONFIG.deleteApi, {
-                        chat_session_id: sessionId,
-                    });
+                    await apiPost(CONFIG.deleteApi, { chat_session_id: sId });
                     successCount++;
-                    if (itemDiv) itemDiv.classList.add('deleted');
-                    cb.checked = false;
-                    cb.disabled = true;
-                    if (titleSpan) titleSpan.textContent = '[已删除]';
-                } catch (err) {
-                    failCount++;
-                    if (titleSpan) {
-                        titleSpan.textContent = '[删除失败]';
-                        titleSpan.style.color = '#ef4444';
-                    }
+                } catch(e) {
+                    console.error('Delete Error', e);
                 }
-
-                const pct = Math.floor(((i + 1) / checkedCbs.length) * 100);
-                setProgress(pct);
-                setStatus(`删除中... ${i + 1}/${checkedCbs.length} （成功 ${successCount}，失败 ${failCount}）`);
-
-                if (i < checkedCbs.length - 1) {
-                    await sleep(CONFIG.deleteInterval);
-                }
+                await sleep(CONFIG.deleteInterval);
             }
 
-            // 从缓存中同步移除已成功删除的会话
-            const deletedIds = Array.from(overlay.querySelectorAll('.ds-session-cb:disabled')).map(cb => cb.value);
-            try {
-                const lTags = JSON.parse(localStorage.getItem('ds_local_tags') || '{}');
-                deletedIds.forEach(id => { delete lTags[id]; });
-                localStorage.setItem('ds_local_tags', JSON.stringify(lTags));
-            } catch(_) {}
+            window.__dsCachedSessions = window.__dsCachedSessions.filter(s => !deletedIds.includes(s.id));
+            saveCache();
+            renderResultList(window.__dsCachedSessions, resultList, resultCount, selectAllCb);
 
-            updateDeleteBtnState();
-            setStatus(`删除完成：成功 ${successCount} 条，失败 ${failCount} 条`);
+            dsAlert(`成功销毁 ${successCount} 个会话。`);
             lockUI(false);
-
-            // 提示刷新页面以更新侧边栏
-            if (successCount > 0) {
-                appendLog(`提示：刷新页面可更新左侧会话列表`);
-            }
         });
 
         // ============ 5. Tab 切换逻辑 ============
         const tabs = overlay.querySelectorAll('.ds-tab-btn');
         const contents = overlay.querySelectorAll('.ds-tab-content');
         tabs.forEach(btn => {
-            btn.addEventListener('click', () => {
+            btn.addEventListener('click', (e) => { e.stopPropagation();
                 tabs.forEach(t => t.classList.remove('active'));
                 contents.forEach(c => c.classList.remove('active'));
                 btn.classList.add('active');
@@ -1876,6 +1851,7 @@ ${JSON.stringify(simplifiedList)}`;
 
         function savePrompts(arr) { localStorage.setItem(LS_PROMPTS, JSON.stringify(arr)); }
         function renderPrompts() {
+            if (!promptListEl) return;
             let arr = [];
             try { arr = JSON.parse(localStorage.getItem(LS_PROMPTS) || '[]'); } catch(e){}
             promptListEl.innerHTML = '';
@@ -1905,10 +1881,20 @@ ${JSON.stringify(simplifiedList)}`;
                 });
 
                 const ta = card.querySelector('.ds-prompt-textarea');
-                ta.addEventListener('change', () => {
-                    const prompts = JSON.parse(localStorage.getItem(LS_PROMPTS) || '[]');
-                    const match = prompts.find(x => x.id === p.id);
-                    if (match) { match.content = ta.value; savePrompts(prompts); }
+                let autoSaveTimer;
+                ta.addEventListener('input', () => {
+                    clearTimeout(autoSaveTimer);
+                    card.style.borderColor = '#3b82f6';
+                    autoSaveTimer = setTimeout(() => {
+                        const prompts = JSON.parse(localStorage.getItem(LS_PROMPTS) || '[]');
+                        const match = prompts.find(x => x.id === p.id);
+                        if (match) { 
+                            match.content = ta.value; 
+                            savePrompts(prompts); 
+                            card.style.borderColor = '#10b981';
+                            setTimeout(() => card.style.borderColor = '#e2e8f0', 800);
+                        }
+                    }, 500);
                 });
 
                 const del = card.querySelector('.ds-p-del');
@@ -1939,22 +1925,22 @@ ${JSON.stringify(simplifiedList)}`;
                 if (!(await dsConfirm('此操作将清空您当前全部自定义提示词，并替换为精心调校的 10 款顶级专家角色预设（涵盖医疗、法律、技术、创作等领域）。\n\n操作不可撤销，确认执行吗？', '载入顶级专家预设'))) return;
                 
                 const presets = [
-                    { name: '🏥 顶尖医疗首席专家', content: '你是一位拥有 30 年临床经验的顶尖三甲医院首席医疗专家，横跨内科、外科、影像与病理多个领域。请用严谨、循证的医学语言分析用户的问题，结合最新临床指南（如 UpToDate、中国专家共识等）给出专业的诊断思路、鉴别诊断和治疗建议。回答结构清晰，必要时列出检查项目和注意事项。在结尾注明\u0022以上内容仅供医学参考，不构成正式诊疗意见，请遵从主治医生的专业判断\u0022。', enabled: false },
-                    { name: '💻 资深全栈架构师', content: '你是一位拥有 15 年以上经验的资深全栈软件架构师，精通分布式系统、微服务、DDD 领域驱动设计及云原生架构。请用工程师视角回答问题，代码优先使用现代最佳实践（ES6+/TypeScript/Python 3.x），并给出可落地的架构建议、性能瓶颈分析和潜在技术债务提示，必要时附上代码示例。', enabled: false },
-                    { name: '⚖️ 资深法律顾问', content: '你是一位执业 20 年的资深律师，精通中国民法典、刑法、公司法及劳动法。请从法律条文和司法实践角度进行严谨分析，引用具体法条和典型判例，给出法律风险评估和行动建议。在末尾注明\u0022以上仅为法律参考意见，不构成正式法律委托，具体事务请咨询持证律师\u0022。', enabled: false },
-                    { name: '📊 顶级量化分析师', content: '你是一位华尔街级别的量化分析师，精通统计学、机器学习和金融建模。请用数据驱动的方式回答问题，给出具体的分析方法、关键指标定义和数据解读逻辑，清晰标注假设条件和统计局限性，必要时提供可执行的分析步骤或代码。', enabled: false },
-                    { name: '🎓 顶级学术写作专家', content: '你是一位在 Nature/Science 级别期刊发表过多篇论文的资深学术编辑。请对用户内容进行学术润色：提升论证逻辑严密性，使用精准学术词汇，优化段落结构，确保符合学术写作规范（APA/MLA），同时完整保留作者原始观点和核心论据。', enabled: false },
-                    { name: '🧠 深度思维教练', content: '你是一位融合苏格拉底式问答、批判性思维与第一性原理的资深思维教练。不要直接给出答案，而是通过精准追问引导用户打破认知局限，揭示问题的底层假设，帮助用户建立独立、系统、深度的思维框架，最终让用户自己得出洞见。', enabled: false },
-                    { name: '📝 爆款内容创作总监', content: '你是一位兼任小红书、抖音、公众号的资深内容创作总监，有过百万级爆款作品经验。请用能引发情感共鸣的语气创作内容，标题要有强钩子，段落短而有力，善用数字和对比，适当加入 Emoji，让内容具备病毒式传播潜力。', enabled: false },
-                    { name: '🎨 资深品牌设计总监', content: '你是一位曾服务过世界 500 强品牌的资深 UI/UX 及品牌设计总监。请从品牌策略、视觉系统、用户心理和交互体验角度给出专业建议，引用具体设计原则（如格式塔、菲茨定律、色彩心理学），并给出可量化的优化方向和具体的改进措施。', enabled: false },
-                    { name: '🕵️ 首席网络安全专家', content: '你是一位拥有 CISSP、CEH 等顶级认证的首席网络安全专家，曾为国家级关键基础设施进行安全评估。请从攻防视角进行分析，遵循 OWASP/NIST 框架，给出威胁建模、漏洞评级（CVSS）和可落地的防御加固方案，并严格强调合规和道德边界。', enabled: false },
-                    { name: '🗣️ 雅思/托福满分教练', content: '你是一位雅思/托福双满分的资深考试培训官，拥有 10 年以上头部培训机构教学经验。请精准指出用户英语表达中的语法错误、用词不精准和逻辑缺陷，给出考官视角的评分与扣分理由，并提供地道的高分替换表达，附加实用的 Band 8.0+ 写作或口语技巧。', enabled: false }
+                    { name: '视觉设计总监 (Frontend UI/UX)', content: '你是一家顶尖独立设计工作室的设计总监。你的客户厌倦了模板化的平庸设计，他们需要具有独特视觉辨识度的设计方案。请做出非常刻意、有态度的选择，包括色彩调色板（提供4-6个命名Hex值，拒绝泛滥的配色）、独特的排版排布（不落俗套的展示字体和正文字体搭配，精确到字重和间距）以及恰到好处的微交互动画。如果需求不明确，请主动假定一个具体场景。不要堆砌装饰，不要乱用数字序号，只保留能真正服务于内容的结构。每一次设计都需要包含一个令人难忘的“签名元素”。回复请保持高级感，减少使用多余的Emoji。', enabled: false },
+                    { name: '顶尖医疗首席专家', content: '你是全球顶尖的临床医学首席专家。请以极度严谨、客观且富有同理心的态度分析问题。不堆砌晦涩难懂的医学术语，而是用逻辑严密、循序渐进的语言拆解病理机制与治疗方案。提供基于最新循证医学依据的深刻见解。回复中不要带有任何夸张或情绪化的成分，保持医疗人员的专业克制与温度。最后务必附带免责声明：本分析仅供参考，不作为最终临床诊断，请务必遵从线下主治医师指导。', enabled: false },
+                    { name: '资深全栈架构师', content: '你是一位主导过世界级千万并发系统重构的资深全栈架构师。请以工程化、系统化的高维视角剖析问题。不局限于特定的编程语言，而是从“为什么要这样设计”的第一性原理出发，给出具备高可用性、可扩展性与优雅性的底层架构建议。直指潜在的性能瓶颈与技术债务，提供极具洞察力的最佳实践，而非平庸的入门级代码。', enabled: false },
+                    { name: '首席法律战略顾问', content: '你是拥有深厚法理学底蕴的合伙人级律师。请以极其严密、逻辑无懈可击的法律语言进行分析。剥离表面现象，直击权利义务关系的核心。提供详尽的法律风险预判与兼顾商业利益的维权/合规策略。请保持中立、客观，避免主观臆测，最后务必注明：本建议仅为理论探讨，不构成正式法律意见，请咨询执业律师。', enabled: false },
+                    { name: '首席数据科学家', content: '你是享誉业界的数据科学巨擘。请摒弃空洞的数据口号，以纯粹的数据驱动思维解答问题。构建严密的数学模型，设计精妙的统计分析方法，并给出直指核心业务指标的数据挖掘策略。确保你的推理过程逻辑严密、客观中立。提供可量化、可验证的分析路径，让数据在你的解读下呈现出真正的商业与科学价值。', enabled: false },
+                    { name: '顶尖学术审稿人', content: '你是常年担任 Nature/Science 等顶刊审稿人的学术巨匠。请以极为严苛的学术标准审视用户内容。剔除所有冗余、不精确的表述，用极简、严谨、深度的学术语言重构论证过程。指出逻辑链条中的任何薄弱环节，并提供拔高理论深度的核心建议。保留作者原始观点的同时，使其具备国际顶级水准的学术严谨性。', enabled: false },
+                    { name: '第一性原理教练', content: '你是精通苏格拉底问答法的顶级认知教练。绝不直接给予用户答案。通过尖锐、直指事物本质的反问，逐步剥去问题表面的伪装，迫使对方审视自己底层的逻辑假设。打破他们的认知舒适区，引导他们通过“第一性原理”自己推理出深邃的洞见。言辞犀利，直击灵魂。', enabled: false },
+                    { name: '病毒内容策略总监', content: '你是打造过无数现象级爆款的首席内容策略官。请用极其精准的心理学机制解构内容创作。抛弃平庸的文案，设计具有强烈钩子、极致共鸣和无法抗拒的传播势能的话语体系。确保文字充满节奏感，直击人性的痛点与爽点。不需要过度的装饰，只提供锋利、直击人心的高转化内容。', enabled: false },
+                    { name: '首席红队渗透专家', content: '你是具有顶级攻防实战经验的首席网络安全（红队）专家。请以进攻者的视角、零信任的原则审视目标。精准识别深层次的架构漏洞与潜在的攻击链路。提供冷酷、理性且极具深度的威胁情报分析，并反向推导给出系统化、多维度的防御加固与应急响应策略，确保合规与安全并重。', enabled: false },
+                    { name: '高阶语言学大师', content: '你是深耕应用语言学数十年的跨文化交际大师。不仅纠正语法，更要从修辞学、语用学和跨文化心理的角度，将用户的语言打磨至极度地道且优雅的境界。剖析不同表达背后的微妙情绪与权力结构，提供最符合目标语境的高阶替换方案，赋予语言直抵人心的力量。', enabled: false }
                 ];
                 
                 const prompts = presets.map((p, index) => ({ id: Date.now() + index, name: p.name, content: p.content, enabled: p.enabled }));
                 savePrompts(prompts);
                 renderPrompts();
-                dsAlert('✅ 已成功载入 10 款顶级专家预设！');
+                dsAlert('已成功载入 10 款顶级专家预设！');
             });
         }
 
@@ -1965,7 +1951,7 @@ ${JSON.stringify(simplifiedList)}`;
         }
 
         overlay.querySelector('[data-tab="prompt"]').addEventListener('click', () => {
-            if(!promptListEl.hasChildNodes()) renderPrompts();
+            if (promptListEl.children.length === 0) renderPrompts();
         });
 
         // ============ 7. 导出与 Fork ============
@@ -2421,7 +2407,7 @@ ${JSON.stringify(simplifiedList)}`;
                 if (checkedCbs.length === 0) return dsAlert('请先在左侧列表中勾选需要分类的会话', 'warning');
 
                 let conf = window.__dsGetActiveAIConfig ? window.__dsGetActiveAIConfig() : {};
-                if (!conf.url || !conf.key || !conf.model) return dsAlert('⚠️ 请先在 Tab 5「大模型神经中枢」面板中配置并激活好 API！', 'warning');
+                if (!conf.url || !conf.key || !conf.model) return dsAlert('️ 请先在 Tab 5「大模型神经中枢」面板中配置并激活好 API！', 'warning');
 
                 lockUI(true);
                 aiCatBtn.disabled = true;
@@ -2453,35 +2439,55 @@ ${JSON.stringify(items.map(s => {
                     const planProgressStatus = overlay.querySelector('#ds-progress-status-ai-plan');
                     
                     let fakeProgressTimer = null;
-                    if (planProgressWrap) {
-                        planProgressWrap.style.display = 'block';
-                        planProgressBar.style.width = '2%';
-                        
-                        const loadingPhrases = [
-                            '🚀 神经中枢已连接，正在唤醒大模型...',
-                            '🧬 正在加载语义分析算法，编译中...',
-                            '📡 建立高维数据图谱映射...',
-                            '⚡ 正在提取上下文特征，渲染场景...',
-                            '🧠 AI 深度思考中，梳理逻辑脉络...',
-                            '⏳ 数据量较大，预计还需 3-5 秒...',
-                            '🔥 正在进行最后的神经元突触对齐...'
-                        ];
-                        let ticks = 0;
-                        let curProgress = 2;
-                        
-                        if (planProgressStatus) planProgressStatus.textContent = loadingPhrases[0];
-                        
-                        fakeProgressTimer = setInterval(() => {
-                            ticks++;
-                            curProgress += (92 - curProgress) * 0.05; // 进度条减速，平滑逼近92%
-                            if (curProgress > 92) curProgress = 92;
-                            if (planProgressBar) planProgressBar.style.width = curProgress + '%';
+                        if (planProgressWrap) {
+                            planProgressWrap.style.display = 'block';
+                            planProgressBar.style.width = '0%';
                             
-                            if (planProgressStatus && ticks % 4 === 0) { // Update text every ~2s
-                                const textIdx = Math.floor(ticks / 4) % loadingPhrases.length;
-                                planProgressStatus.textContent = loadingPhrases[textIdx];
-                            }
-                        }, 500);
+                            const loadingPhrases = [
+                                { t: 0, progress: 5, text: '正在构建神经连接，给您的 Agent 下达指令...' },
+                                { t: 2, progress: 15, text: 'Agent 已就绪，正在读取上下文并解析语义...' },
+                                { t: 5, progress: 30, text: '正在进行高维特征提取，寻找历史对话的最佳分类点...' },
+                                { t: 9, progress: 45, text: '数据量有点大，Agent 正在努力梳理逻辑拓扑...' },
+                                { t: 14, progress: 55, text: '突发事件：由于过度劳累，Agent 决定去冲泡一杯赛博咖啡 ☕...' },
+                                { t: 18, progress: 65, text: 'Agent 摸鱼结束，精神抖擞地继续为您打工...' },
+                                { t: 22, progress: 80, text: '正在进行最后的规则对齐与冲突校验...' },
+                                { t: 26, progress: 92, text: '几乎完成！正在生成结构化整理方案...' }
+                            ];
+                            
+                            let startTime = Date.now();
+                            let currentTargetProgress = 0;
+                            let curProgress = 0;
+                            
+                            if (planProgressStatus) planProgressStatus.textContent = loadingPhrases[0].text;
+                            
+                            fakeProgressTimer = setInterval(() => {
+                                const elapsed = (Date.now() - startTime) / 1000;
+                                
+                                let activePhase = loadingPhrases[0];
+                                for (let i = loadingPhrases.length - 1; i >= 0; i--) {
+                                    if (elapsed >= loadingPhrases[i].t) {
+                                        activePhase = loadingPhrases[i];
+                                        if (planProgressStatus && planProgressStatus.textContent !== activePhase.text) {
+                                            planProgressStatus.style.opacity = '0';
+                                            setTimeout(() => {
+                                                planProgressStatus.textContent = activePhase.text;
+                                                planProgressStatus.style.opacity = '1';
+                                            }, 200);
+                                        }
+                                        break;
+                                    }
+                                }
+                                
+                                currentTargetProgress = activePhase.progress;
+                                
+                                // Smooth spring-like animation towards target progress
+                                curProgress += (currentTargetProgress - curProgress) * 0.08;
+                                // Add slight jitter to simulate real work
+                                curProgress += Math.random() * 0.5;
+                                if (curProgress > 95) curProgress = 95;
+                                
+                                if (planProgressBar) planProgressBar.style.width = curProgress + '%';
+                            }, 100);
                     }
 
                     if (aiCatAbortBtn) {
@@ -3237,6 +3243,9 @@ ${JSON.stringify(items.map(s => {
     };
 
     InlinePromptUI.init();
+
+    // 初始化渲染提示词
+    if (typeof renderPrompts === 'function') renderPrompts();
 
     // 监听输入框区域的 DOM 变化，防止被 React 冲刷掉
     let mountTimer = null;
