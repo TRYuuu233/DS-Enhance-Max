@@ -4,7 +4,7 @@
 
 **突破原生限制！为 DeepSeek 注入灵魂的高阶增强套件**
 
-[![Version](https://img.shields.io/badge/version-v8.0.6-blue.svg?style=for-the-badge&logo=github)](#)
+[![Version](https://img.shields.io/badge/version-v8.0.8-blue.svg?style=for-the-badge&logo=github)](#)
 [![License](https://img.shields.io/badge/license-MIT-green.svg?style=for-the-badge)](#)
 [![Platform](https://img.shields.io/badge/platform-Tampermonkey-orange.svg?style=for-the-badge&logo=tampermonkey)](#)
 
@@ -42,6 +42,26 @@
 
 ### ⚙️ 5. 自定义系统提示词 (Prompt Injection)
 一键注入原生 UI，自由开关定制化的人设指令，打造只属于你的完美 AI 人格。
+
+---
+
+## 📅 更新日志 (Changelog)
+
+### v8.0.8 — 稳定性与兼容性专项（最新，基于 v8.0.7 基线）
+> 感谢用户「曙光」反馈「批量删除后控制台无法关闭」的问题。
+
+本次更新不涉及数据结构变更，既有的标签、提示词与模型配置均完整保留，覆盖安装即可。
+
+- **修复**：批量删除后「关闭控制台」按钮被锁定、需刷新页面才能恢复的问题；异常分支现可正确释放界面锁。
+- **加固**：启动链路全面故障隔离，原生 Fetch/XHR 拦截、本地存储与路由钩子中任一环节异常，均不再中断整体加载。
+- **重构**：入口优先挂载，不再依赖页面渲染时序；控制台构建异常时入口自动转为告警态，可查看自检报告并一键重试。
+- **新增**：入口自愈机制，按钮被移除、遮挡或样式隐藏时自动重建，兼容 SPA 路由切换。
+- **修复**：AI 语义检索超时定时器泄漏，避免其误中断后续检索请求。
+- **适配**：会话抓取增加多策略适配层，侧栏结构调整后同步依然有效。
+- **适配**：内嵌「系统指令」入口改为多关键词与结构双重定位，兼容官方「联网搜索」更名为「智能搜索」。
+- **优化**：提示词读取异常防护、悬浮入口位置越界校正，并支持 `Alt + Shift + D` 直接唤起控制台。
+
+> 更新后在 DeepSeek 页面强制刷新一次（`Ctrl + F5`）即可生效；脚本头部 `@version` 应为 `8.0.8`。若入口未出现，可在控制台执行 `__dsDiag.check()` 查看自检报告。
 
 ---
 
