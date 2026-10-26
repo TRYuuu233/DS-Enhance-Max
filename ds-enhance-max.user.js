@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         DS Enhance Max (满血版) [适用最新DeepSeek网页]
 // @namespace    https://chat.deepseek.com/
-// @version      8.0.6
+// @version      8.0.8
 // @description  【满血升级】突破原生限制！支持 AI 智能会话搜索、AI 自动化标签整理、多大模型 API 自由切换、原生隔离级批量管理。集成批量删除、导出、自定义提示词以及批量FORK等满血增强功能。
 // @author       TRYuuu
 // @license      MIT
@@ -38,6 +38,151 @@
 (function () {
     'use strict';
 
+    // ==================== 0. 启动自检与故障隔离 ====================
+    // 早期钩子（fetch/XHR 拦截、localStorage 覆写、history 覆写）只要抛一次异常，整个脚本就会当场死掉，
+    // 表现就是「刷新后页面上看不到任何插件入口」。所以每一步都单独隔离：任何一步失败都不影响主界面挂载。
+    const DSE_VERSION = '8.0.8';
+    window.__dsDiag = window.__dsDiag || {};
+    window.__dsDiag.version = DSE_VERSION;
+    window.__dsEarlyErrors = window.__dsEarlyErrors || [];
+    function dsSafe(label, fn) {
+        try {
+            return fn();
+        } catch (e) {
+            try { window.__dsEarlyErrors.push(label + ': ' + ((e && e.message) || e)); } catch (_) {}
+            try { console.warn('[DS Enhance Max] 启动步骤失败（已跳过，不影响主界面）：' + label, e); } catch (_) {}
+            return undefined;
+        }
+    }
+
+    // ==================== 0.1 尸检入口（入口优先于一切）====================
+    // 设计原则：入口按钮的创建不依赖 body、不依赖 UI 构建成功、不依赖任何功能模块。
+    // 官网改版 / 接口失效 / UI 崩溃 / 脚本只跑通了一半，页面上都必须留一枚看得见、点得动的入口。
+    window.__dsBoot = { startedAt: Date.now(), uiReady: false, uiError: null, attempts: 0, lastTryAt: 0 };
+    const DS_ENTRY_STYLE = [
+        'position:fixed', 'top:80px', 'right:16px', 'left:auto',
+        'z-index:2147483000', 'display:block', 'visibility:visible', 'opacity:1',
+        'pointer-events:auto', 'padding:8px 16px', 'margin:0',
+        'background:#ffffff', 'color:#0f172a', 'border:1px solid #e2e8f0', 'border-radius:20px',
+        'font-size:13px', 'font-weight:600', 'line-height:1.2', 'cursor:pointer',
+        'box-shadow:0 4px 14px rgba(0,0,0,0.08)',
+        'font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif',
+        'letter-spacing:0.3px', 'user-select:none'
+    ].join(';') + ';';
+
+    function dsEntry() {
+        return document.getElementById('ds-bulk-btn');
+    }
+
+    // 把入口钉到页面上：有 body 用 body，没有 body 就先挂到 <html> 根节点
+    function dsEntryEnsure() {
+        if (!document.documentElement) return null;
+        let btn = dsEntry();
+        if (btn) return btn;
+        btn = document.createElement('button');
+        btn.id = 'ds-bulk-btn';
+        btn.type = 'button';
+        btn.setAttribute('style', DS_ENTRY_STYLE);
+        btn.dataset.dsRole = 'entry';
+        btn.title = 'DS Enhance Max：点击打开控制台（Alt+Shift+D 亦可）';
+        btn.textContent = window.__dsBoot.uiReady ? 'DS Enhance Max' : 'DS Enhance Max …';
+        btn.addEventListener('click', (ev) => {
+            ev.preventDefault();
+            ev.stopPropagation();
+            if (typeof window.__dsOpenConsole === 'function') {
+                try { window.__dsOpenConsole(); return; } catch (e) { window.__dsBoot.uiError = (e && e.stack) || String(e); }
+            }
+            dsShowSelfCheck();
+        });
+        try { (document.body || document.documentElement).appendChild(btn); } catch (e) { return null; }
+        return btn;
+    }
+
+    // 入口状态：ready = 正常；其余 = 尸体态（能点，但点开是自检报告）
+    function dsEntrySetState(state, note) {
+        const btn = dsEntryEnsure();
+        if (!btn) return;
+        if (state === 'ready') {
+            btn.textContent = 'DS Enhance Max';
+            btn.setAttribute('style', DS_ENTRY_STYLE);
+            btn.title = 'DS Enhance Max：点击打开控制台（Alt+Shift+D 亦可）';
+        } else {
+            btn.textContent = 'DS Enhance Max ⚠';
+            btn.setAttribute('style', DS_ENTRY_STYLE + 'background:#fef2f2;border-color:#fca5a5;color:#b91c1c;');
+            btn.title = 'DS Enhance Max 未能正常启动：点击查看自检报告' + (note ? ('（' + note + '）') : '');
+        }
+    }
+
+    // ==================== 0.2 自检 / 尸检报告面板 ====================
+    function dsShowSelfCheck() {
+        dsSafe('self-check', () => {
+            const old = document.getElementById('ds-selfcheck');
+            if (old) { old.remove(); return; }
+            const esc = (s) => String(s).replace(/[<>&"]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c]));
+            const wrap = document.createElement('div');
+            wrap.id = 'ds-selfcheck';
+            wrap.setAttribute('style', 'position:fixed;top:60px;right:16px;z-index:2147483001;width:min(420px,92vw);max-height:70vh;overflow:auto;background:#ffffff;color:#0f172a;border:1px solid #e2e8f0;border-radius:14px;box-shadow:0 18px 48px rgba(0,0,0,.18);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:12.5px;line-height:1.6;padding:14px 16px;');
+
+            const errs = []
+                .concat(window.__dsEarlyErrors || [])
+                .concat(window.__dsBoot.uiError ? ['UI: ' + String(window.__dsBoot.uiError).split('\n')[0]] : [])
+                .concat((window.__dsDiag && window.__dsDiag.lastMountError) ? ['Mount: ' + String(window.__dsDiag.lastMountError).split('\n')[0]] : []);
+
+            const rows = [
+                ['脚本版本', DSE_VERSION],
+                ['运行时长', Math.round((Date.now() - window.__dsBoot.startedAt) / 1000) + ' 秒'],
+                ['页面地址', location.pathname],
+                ['主界面', window.__dsBoot.uiReady ? '已就绪' : '未就绪（当前是尸检入口）'],
+                ['挂载尝试', window.__dsBoot.attempts + ' 次'],
+                ['提示词拦截器', (typeof window.fetch === 'function' && String(window.fetch).indexOf('origFetch') > -1) ? '已安装' : '未安装'],
+                ['本地存储', (function () { try { localStorage.setItem('__ds_probe', '1'); localStorage.removeItem('__ds_probe'); return '可用'; } catch (e) { return '被拒绝：' + e.message; } })()],
+                ['侧栏会话链接', document.querySelectorAll('a[href*="/a/chat/s/"]').length + ' 条']
+            ];
+
+            wrap.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">'
+                + '<strong style="font-size:14px;">DS Enhance Max · 自检报告</strong>'
+                + '<span data-ds-close="1" style="cursor:pointer;color:#94a3b8;font-size:16px;padding:0 4px;">×</span></div>'
+                + '<table style="width:100%;border-collapse:collapse;">'
+                + rows.map(r => '<tr><td style="padding:3px 0;color:#64748b;white-space:nowrap;vertical-align:top;">' + esc(r[0]) + '</td><td style="padding:3px 0 3px 10px;color:#0f172a;word-break:break-all;">' + esc(r[1]) + '</td></tr>').join('')
+                + '</table>'
+                + '<div style="margin-top:10px;padding-top:10px;border-top:1px solid #f1f5f9;">'
+                + '<div style="color:#64748b;margin-bottom:4px;">捕获到的异常（' + errs.length + '）</div>'
+                + '<div style="max-height:120px;overflow:auto;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px;font-family:ui-monospace,Consolas,monospace;font-size:11px;white-space:pre-wrap;word-break:break-all;">'
+                + esc(errs.length ? errs.join('\n') : '无') + '</div></div>'
+                + '<div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">'
+                + '<span data-ds-retry="1" style="cursor:pointer;padding:6px 12px;background:#3b82f6;color:#fff;border-radius:8px;font-weight:600;">重试启动</span>'
+                + '<span data-ds-copy="1" style="cursor:pointer;padding:6px 12px;background:#f1f5f9;color:#475569;border:1px solid #cbd5e1;border-radius:8px;">复制报告</span>'
+                + '<span data-ds-close="1" style="cursor:pointer;padding:6px 12px;background:#f1f5f9;color:#475569;border:1px solid #cbd5e1;border-radius:8px;">关闭</span>'
+                + '</div>';
+
+            (document.body || document.documentElement).appendChild(wrap);
+
+            wrap.addEventListener('click', (ev) => {
+                const t = ev.target;
+                if (t.dataset.dsClose) { wrap.remove(); return; }
+                if (t.dataset.dsRetry) {
+                    window.__dsBoot.attempts = 0;
+                    window.__dsBoot.lastTryAt = 0;
+                    if (typeof window.__dsTryMount === 'function') window.__dsTryMount();
+                    else wrap.remove();
+                    return;
+                }
+                if (t.dataset.dsCopy) {
+                    const text = 'DS Enhance Max ' + DSE_VERSION + '\nURL: ' + location.href + '\n'
+                        + rows.map(r => r[0] + ': ' + r[1]).join('\n')
+                        + '\n错误:\n' + (errs.length ? errs.join('\n') : '无');
+                    try {
+                        navigator.clipboard.writeText(text).then(() => { t.textContent = '已复制'; }, () => { window.prompt('复制下面的报告：', text); });
+                    } catch (e) { window.prompt('复制下面的报告：', text); }
+                }
+            });
+        });
+    }
+    window.__dsSelfCheck = dsShowSelfCheck;
+
+    // document-start 立刻把入口钉住（此时通常还没有 body，就挂到 <html> 上）
+    dsEntryEnsure();
+
     const CONFIG = {
         listApi: '/api/v0/chat_session/fetch_page',
         detailApi: '/api/v0/chat_session/fetch_messages',
@@ -55,37 +200,49 @@
     let lastInjectedSignature = null;
 
     // ==================== 状态响应拦截 (实时同步UI) ====================
-    const origSetItem = localStorage.setItem;
-    localStorage.setItem = function(key, value) {
-        origSetItem.call(this, key, value);
-        if ((key === 'ds_global_tags' || key === 'ds_local_tags') && typeof window.__dsSyncTagUI === 'function') {
-            setTimeout(window.__dsSyncTagUI, 10);
-        }
-    };
-    const origRemoveItem = localStorage.removeItem;
-    localStorage.removeItem = function(key) {
-        origRemoveItem.call(this, key);
-        if ((key === 'ds_global_tags' || key === 'ds_local_tags') && typeof window.__dsSyncTagUI === 'function') {
-            setTimeout(window.__dsSyncTagUI, 10);
-        }
-    };
+    dsSafe('storage-hooks', () => {
+        const origSetItem = localStorage.setItem;
+        localStorage.setItem = function(key, value) {
+            origSetItem.call(this, key, value);
+            if ((key === 'ds_global_tags' || key === 'ds_local_tags') && typeof window.__dsSyncTagUI === 'function') {
+                setTimeout(window.__dsSyncTagUI, 10);
+            }
+        };
+        const origRemoveItem = localStorage.removeItem;
+        localStorage.removeItem = function(key) {
+            origRemoveItem.call(this, key);
+            if ((key === 'ds_global_tags' || key === 'ds_local_tags') && typeof window.__dsSyncTagUI === 'function') {
+                setTimeout(window.__dsSyncTagUI, 10);
+            }
+        };
+    });
 
     // 监听 URL 变化重置指纹（解决切换房间不触发新提示词的问题）
-    const originalPushState = history.pushState;
-    history.pushState = function(...args) {
-        const newUrl = args[2];
-        if (newUrl) {
-            const oldPath = location.pathname;
-            const newPath = newUrl.toString().startsWith('http') ? new URL(newUrl).pathname : new URL(newUrl, location.origin).pathname;
-            if (oldPath !== '/' && oldPath !== newPath) lastInjectedSignature = null;
-        }
-        return originalPushState.apply(this, args);
-    };
-    window.addEventListener('popstate', () => { lastInjectedSignature = null; });
+    dsSafe('history-hooks', () => {
+        const originalPushState = history.pushState;
+        history.pushState = function(...args) {
+            const newUrl = args[2];
+            if (newUrl) {
+                const oldPath = location.pathname;
+                const newPath = newUrl.toString().startsWith('http') ? new URL(newUrl).pathname : new URL(newUrl, location.origin).pathname;
+                if (oldPath !== '/' && oldPath !== newPath) lastInjectedSignature = null;
+            }
+            return originalPushState.apply(this, args);
+        };
+        window.addEventListener('popstate', () => { lastInjectedSignature = null; });
+    });
+
+    // 安全读取提示词（localStorage 数据损坏时不抛错，避免内嵌按钮状态渲染中断）
+    function safeReadPrompts() {
+        try {
+            const arr = JSON.parse(localStorage.getItem(LS_PROMPTS) || '[]');
+            return Array.isArray(arr) ? arr : [];
+        } catch (e) { return []; }
+    }
 
     function getEnabledPrompts() {
         try {
-            const arr = JSON.parse(localStorage.getItem(LS_PROMPTS) || '[]');
+            const arr = safeReadPrompts();
             if (Array.isArray(arr) && arr.length) return arr.filter(p => p.enabled).map(p => p.content).filter(Boolean);
         } catch(e) {}
         return [];
@@ -124,7 +281,7 @@
         return bodyStr;
     }
 
-    (function installInterceptor() {
+    dsSafe('interceptor', function installInterceptor() {
         const origFetch = window.fetch;
         window.fetch = async function(input, init = {}) {
             try {
@@ -169,14 +326,20 @@
             }
             return origSend.apply(this, [body]);
         };
-    })();
+    });
 
     // ==================== 2. 等待 DOM 准备完毕 ====================
     function waitForDOM() {
         return new Promise(resolve => {
-            if (document.body) resolve();
-            else new MutationObserver(() => { if (document.body) resolve(); })
-                .observe(document.documentElement, { childList: true });
+            if (document.body) { resolve(); return; }
+            let done = false;
+            const finish = () => { if (done) return; done = true; resolve(); };
+            try {
+                const mo = new MutationObserver(() => { if (document.body) { mo.disconnect(); finish(); } });
+                mo.observe(document.documentElement, { childList: true, subtree: true });
+            } catch (e) {}
+            // 兜底：官网把 body 拖得很晚（或改由别的容器承载）时，也不能让整个脚本永远不启动
+            setTimeout(finish, 3000);
         });
     }
 
@@ -464,25 +627,62 @@
 
     // ==================== DOM 降级模式（API 鉴权失败时自动切换）====================
 
+    // ==================== 会话节点适配层（官网改类名/改路径时不再全盘失效）====================
+    function dsSessionAnchors() {
+        const selectors = [
+            'a[href*="/a/chat/s/"]',
+            'a[href*="/chat/s/"]',
+            '[data-chat-session-id]',
+            '[data-session-id]'
+        ];
+        for (const sel of selectors) {
+            try {
+                const list = document.querySelectorAll(sel);
+                if (list && list.length) return Array.from(list);
+            } catch (e) {}
+        }
+        return [];
+    }
+
+    function dsSessionIdFromNode(el) {
+        try {
+            const attrNames = ['data-chat-session-id', 'data-session-id', 'data-id'];
+            for (const a of attrNames) {
+                const v = el.getAttribute && el.getAttribute(a);
+                if (v && /^[\w-]{8,}$/.test(v)) return v;
+            }
+            const href = (el.getAttribute && el.getAttribute('href')) || '';
+            const m = href.match(/\/(?:a\/)?chat\/s\/([\w-]+)/) || href.match(/\/([\w-]{16,})\/?$/);
+            if (m) return m[1];
+        } catch (e) {}
+        return null;
+    }
+
+    function dsSessionTitleFromNode(el) {
+        try {
+            const titleEl = el.querySelector('.c08e6e93') ||
+                            el.querySelector('[class*="title"]') ||
+                            el.querySelector('[class*="name"]');
+            return ((titleEl && titleEl.textContent) || el.textContent || '（无标题）').trim();
+        } catch (e) {
+            return '（无标题）';
+        }
+    }
+
     /**
      * 直接从侧边栏 DOM 读取所有历史会话列表。
-     * 依赖 DeepSeek 页面产出的 <a href="/a/chat/s/xxx"> 结构。
+     * 不再死绑定 <a href="/a/chat/s/xxx">：兼容新路径/新属性/纯 div 列表。
      */
     function fetchSessionsFromDOM() {
         const sessions = [];
-        // 侧边栏中所有会话链接
-        const links = document.querySelectorAll('a[href*="/a/chat/s/"]');
+        // 侧边栏中所有会话节点
+        const links = dsSessionAnchors();
         links.forEach(a => {
             const href = a.getAttribute('href') || '';
-            const idMatch = href.match(/\/a\/chat\/s\/([\w-]+)/);
-            if (!idMatch) return;
-            const id = idMatch[1];
-            // 标题文本：优先找 .c08e6e93，fallback 到元素自身文本
-            const titleEl = a.querySelector('.c08e6e93') ||
-                            a.querySelector('[class*="title"]') ||
-                            a.querySelector('[class*="name"]');
-            const title = (titleEl?.textContent || a.textContent || '（无标题）').trim();
-            if (id && !sessions.find(s => s.id === id)) {
+            const id = dsSessionIdFromNode(a);
+            if (!id) return;
+            const title = dsSessionTitleFromNode(a);
+            if (!sessions.find(s => s.id === id)) {
                 sessions.push({ id, title, href });
             }
         });
@@ -494,7 +694,7 @@
      */
     async function autoScrollSidebar(onProgress, debugLog) {
         return new Promise((resolve, reject) => {
-            const links = document.querySelectorAll('a[href*="/a/chat/s/"]');
+            const links = dsSessionAnchors();
             if (links.length === 0) {
                 return reject(new Error('未在页面发现任何会话，请确认已登录且侧边栏已展开'));
             }
@@ -521,14 +721,12 @@
                 // 如果运行中途 UI 被卸载，则安全退出
                 if (!document.getElementById('ds-bulk-btn')) return reject(new Error('UI 已被关闭或卸载'));
 
-                const currentLinks = document.querySelectorAll('a[href*="/a/chat/s/"]');
+                const currentLinks = dsSessionAnchors();
                 currentLinks.forEach(a => {
                     const href = a.getAttribute('href') || '';
-                    const idMatch = href.match(/\/a\/chat\/s\/([\w-]+)/);
-                    if (!idMatch) return;
-                    const id = idMatch[1];
-                    const titleEl = a.querySelector('.c08e6e93') || a.querySelector('[class*="title"]') || a.querySelector('[class*="name"]');
-                    const title = (titleEl?.textContent || a.textContent || '（无标题）').trim();
+                    const id = dsSessionIdFromNode(a);
+                    if (!id) return;
+                    const title = dsSessionTitleFromNode(a);
                     if (!sessionsMap.has(id)) {
                         sessionsMap.set(id, { id, title, href, content: null });
                     }
@@ -635,7 +833,10 @@
                 position: fixed;
                 top: 80px;
                 right: 16px;
-                z-index: 99999;
+                z-index: 2147483000 !important;
+                display: block !important;
+                visibility: visible !important;
+                pointer-events: auto !important;
                 padding: 8px 16px;
                 background: #ffffff;
                 color: #0f172a;
@@ -798,12 +999,21 @@
                 overflow-y: auto; margin-top: 8px; white-space: pre-wrap; word-break: break-all;
             }
         `;
-        document.head.appendChild(style);
+        style.id = 'ds-style-core';
+        const staleStyle = document.getElementById('ds-style-core');
+        if (staleStyle) staleStyle.remove();
+        (document.head || document.documentElement).appendChild(style);
+
+        // 浮动入口按钮：先摘掉启动期钉上的「尸检入口」，避免出现两个同名入口
+        const staleEntry = document.getElementById('ds-bulk-btn');
+        if (staleEntry) staleEntry.remove();
 
         // 浮动入口按钮
         const triggerBtn = document.createElement('button');
         triggerBtn.id = 'ds-bulk-btn';
         triggerBtn.textContent = 'DS Enhance Max';
+        // 临时兜底：万一下面接线途中出错，按钮依然可点，并弹出自检报告
+        triggerBtn.onclick = () => { if (!window.__dsBoot.uiReady) dsShowSelfCheck(); };
 
         // 遮罩层 + 弹窗
         const overlay = document.createElement('div');
@@ -1196,8 +1406,11 @@
             </div>
         `;
 
-        document.body.appendChild(triggerBtn);
-        document.body.appendChild(overlay);
+        (document.body || document.documentElement).appendChild(triggerBtn);
+        (document.body || document.documentElement).appendChild(overlay);
+
+        // 对外暴露「打开控制台」，供入口按钮 / 热键 / 自检面板复用
+        window.__dsOpenConsole = () => { overlay.style.display = 'block'; };
 
         // 元素引用
         const modal = overlay.querySelector('#ds-bulk-modal');
@@ -1274,8 +1487,10 @@
         try {
             const pos = JSON.parse(localStorage.getItem('ds_btn_pos'));
             if (pos && typeof pos.top === 'number' && typeof pos.left === 'number') {
-                triggerBtn.style.top = pos.top + 'px';
-                triggerBtn.style.left = pos.left + 'px';
+                const maxL = Math.max(0, window.innerWidth - 180);
+                const maxT = Math.max(0, window.innerHeight - 60);
+                triggerBtn.style.top = Math.max(0, Math.min(pos.top, maxT)) + 'px';
+                triggerBtn.style.left = Math.max(0, Math.min(pos.left, maxL)) + 'px';
                 triggerBtn.style.right = 'auto';
             }
         } catch(e){}
@@ -1428,8 +1643,8 @@
                 // 进行毫秒级本地过滤
                 matchedSessions = window.__dsCachedSessions.filter(s => {
                     const titleMatch = (s.title || '').toLowerCase().includes(kw);
-                    const sessionTags = window.__dsLocalTags[s.id] || [];
-                    const tagMatch = sessionTags.some(t => t.name.toLowerCase().includes(kw));
+                    const sessionTags = (window.__dsLocalTags || {})[s.id] || [];
+                    const tagMatch = sessionTags.some(t => t && t.name ? String(t.name).toLowerCase().includes(kw) : false);
                     return titleMatch || tagMatch;
                 });
                 setProgress(100);
@@ -1454,6 +1669,9 @@
         const selectAllCbAi = overlay.querySelector('#ds-select-all-ai');
         const resultCountAi = overlay.querySelector('#ds-result-count-ai');
         let aiAbortController = null;
+        let aiFetchTimeout = null;
+        let aiMatchedSessions = [];
+        let aiPaneRendered = false;
 
         // 打开面板时检查数据状态并显示提示
         triggerBtn.addEventListener('click', () => {
@@ -1620,7 +1838,7 @@ ${textList}`;
 ${textList}`;
                 }
 
-                let aiFetchTimeout = setTimeout(() => {
+                aiFetchTimeout = setTimeout(() => {
                     if (aiAbortController) {
                         aiAbortController.abort();
                         const stElSearch = document.getElementById('ds-ai-search-status-text');
@@ -1681,8 +1899,9 @@ ${textList}`;
                 if(stElFinal) stElFinal.style.display = 'none';
 
 
-                const matchedSessions = sourceData.filter(s => matchedIds.includes(s.id));
-                renderResultList(matchedSessions, resultListAi, resultCountAi, selectAllCbAi);
+                aiMatchedSessions = sourceData.filter(s => matchedIds.includes(s.id));
+                aiPaneRendered = true;
+                renderResultList(aiMatchedSessions, resultListAi, resultCountAi, selectAllCbAi);
 
 
                 // Final stats goes to local status
@@ -1711,6 +1930,8 @@ ${textList}`;
                 progressBarAi.style.width = '0%';
             } finally {
                 if (window.__fakeProgressTimerAi) { clearInterval(window.__fakeProgressTimerAi); window.__fakeProgressTimerAi = null; }
+                clearTimeout(aiFetchTimeout);
+                aiFetchTimeout = null;
                 aiAbortController = null;
                 aiSearchBtn.style.display = '';
                 aiAbortBtn.style.display = 'none';
@@ -2033,6 +2254,7 @@ ${textList}`;
 
             lockUI(true);
             let successCount = 0;
+            try {
             const deletedIds = uniqueCbs.map(cb => cb.value);
             for(let i=0; i<uniqueCbs.length; i++) {
                 const sId = uniqueCbs[i].value;
@@ -2045,39 +2267,26 @@ ${textList}`;
                 await sleep(CONFIG.deleteInterval);
             }
 
-            window.__dsCachedSessions = window.__dsCachedSessions.filter(s => !deletedIds.includes(s.id));
+            // 原地剔除已删除项，保留当前筛选结果（不再重置为全量缓存）
+            const deletedSet = new Set(deletedIds);
+            window.__dsCachedSessions = window.__dsCachedSessions.filter(s => !deletedSet.has(s.id));
             saveCache();
-            renderResultList(window.__dsCachedSessions, resultList, resultCount, selectAllCb);
-
+            
+            matchedSessions = (matchedSessions || []).filter(s => !deletedSet.has(s.id));
+            renderResultList(matchedSessions, resultList, resultCount, selectAllCb);
+            
+            // AI 检索结果面板同步剔除（原先误判 #ds-tab-ai，导致右侧列表删完不刷新）
+            if (aiPaneRendered) {
+                aiMatchedSessions = aiMatchedSessions.filter(s => !deletedSet.has(s.id));
+                renderResultList(aiMatchedSessions, resultListAi, resultCountAi, selectAllCbAi);
+            }
+            
             dsAlert(`成功销毁 ${successCount} 个会话。`);
-                // 刷新插件数据
-                if (successCount > 0) {
-                    // 从缓存中删除
-                    const deletedIds = deletedLog.map(log => log.id);
-                    window.__dsCachedSessions = window.__dsCachedSessions.filter(s => !deletedIds.includes(s.id));
-                    saveCache();
-
-                    // 重新渲染当前列表（如果是 AI 搜索列表则重新渲染 AI 列表，否则渲染全部缓存）
-                    // 检查当前是不是在 AI 搜索面板
-                    const aiTab = document.getElementById('ds-tab-ai');
-                    if (aiTab && aiTab.classList.contains('active')) {
-                         const resultListAi = document.getElementById('ds-result-list-ai');
-                         const resultCountAi = document.getElementById('ds-result-count-ai');
-                         const selectAllCbAi = document.getElementById('ds-select-all-ai');
-                         // 过滤 matchedSessions
-                         if (typeof matchedSessions !== 'undefined') {
-                             matchedSessions = matchedSessions.filter(s => !deletedIds.includes(s.id));
-                             renderResultList(matchedSessions, resultListAi, resultCountAi, selectAllCbAi);
-                         }
-                    } else {
-                         matchedSessions = window.__dsCachedSessions;
-                         renderResultList(matchedSessions, resultList, resultCount, selectAllCb);
-                    }
-                }
-
+        } finally {
+            // 任何情况下都必须解锁 UI，否则「关闭控制台」会一直停留在禁用态
             lockUI(false);
+        }
         });
-
         // ============ 5. Tab 切换逻辑 ============
         const tabs = overlay.querySelectorAll('.ds-tab-btn');
         const contents = overlay.querySelectorAll('.ds-tab-content');
@@ -3153,11 +3362,13 @@ ${JSON.stringify(items.map(s => {
         }
 
         // 按 Escape 关闭
-        document.addEventListener('keydown', (e) => {
+        if (window.__dsEscHandler) document.removeEventListener('keydown', window.__dsEscHandler);
+        window.__dsEscHandler = (e) => {
             if (e.key === 'Escape' && !isRunning && overlay.style.display === 'block') {
                 overlay.style.display = 'none';
             }
-        });
+        };
+        document.addEventListener('keydown', window.__dsEscHandler);
 
         // ==================== UI Logic Enhancements ====================
         // 1. Danger Wipe Logic
@@ -3333,6 +3544,11 @@ ${JSON.stringify(items.map(s => {
                 }, tagSearchInp ? tagSearchInp.value.trim() : '');
             }
         });
+
+        // 全部接线完成：标记 UI 就绪，入口切回正常态
+        window.__dsBoot.uiReady = true;
+        window.__dsBoot.uiError = null;
+        dsEntrySetState('ready');
     }
 
     // ==================== 挂载入口（SPA 兼容） ====================
@@ -3340,17 +3556,52 @@ ${JSON.stringify(items.map(s => {
     let mounted = false;
 
     function tryMount() {
-        if (mounted && document.getElementById('ds-bulk-btn')) return;
+        window.__dsBoot.attempts++;
+        window.__dsBoot.lastTryAt = Date.now();
+        if (mounted && window.__dsBoot.uiReady && document.getElementById('ds-bulk-btn')) return;
         if (!document.body) return;
 
-        // 清理旧实例（路由跳转后）
-        const old = document.getElementById('ds-bulk-btn');
-        if (old) old.remove();
-        const oldOverlay = document.getElementById('ds-bulk-overlay');
-        if (oldOverlay) oldOverlay.remove();
+        // 清理旧实例（路由跳转后），但绝不让页面陷入「一个入口都没有」的状态
+        dsSafe('cleanup', () => {
+            const oldOverlay = document.getElementById('ds-bulk-overlay');
+            if (oldOverlay) oldOverlay.remove();
+        });
+        dsEntryEnsure();
 
-        buildUI();
-        mounted = true;
+        try {
+            buildUI();
+            mounted = true;
+            window.__dsBoot.uiReady = true;
+            window.__dsBoot.uiError = null;
+            window.__dsDiag.mountedAt = Date.now();
+            try { console.info(`[DS Enhance Max] v${DSE_VERSION} 已挂载，入口按钮 #ds-bulk-btn 可用`); } catch (_) {}
+        } catch (e) {
+            mounted = false;
+            window.__dsBoot.uiReady = false;
+            window.__dsBoot.uiError = (e && e.stack) || String(e);
+            window.__dsDiag.lastMountError = window.__dsBoot.uiError;
+            try { console.error('[DS Enhance Max] 主界面构建失败，已切换到尸检入口：', e); } catch (_) {}
+            dsEntrySetState('warn', (e && e.message) || '未知错误');
+            if (!document.getElementById('ds-bulk-btn')) showFallbackEntry(e);
+        }
+    }
+    window.__dsTryMount = tryMount;
+
+    // 兜底入口：万一主界面构建出错，也保证页面上有一个能点、能看到报错的红色按钮
+    function showFallbackEntry(err) {
+        dsSafe('fallback-entry', () => {
+            if (document.getElementById('ds-bulk-btn')) return;
+            const fb = document.createElement('button');
+            fb.id = 'ds-bulk-btn';
+            fb.textContent = 'DS Enhance Max（兜底入口）';
+            fb.style.cssText = 'position:fixed !important; top:80px !important; right:16px !important; left:auto !important; z-index:2147483000 !important; display:block !important; visibility:visible !important; padding:8px 14px !important; background:#ef4444 !important; color:#fff !important; border:none !important; border-radius:20px !important; font-size:13px !important; font-weight:600 !important; cursor:pointer !important; box-shadow:0 4px 14px rgba(239,68,68,.35) !important; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif !important;';
+            fb.onclick = () => {
+                const msg = 'DS Enhance Max 主界面构建失败，请把下面这段报错发给作者：\n\n' + ((err && (err.stack || err.message)) || String(err));
+                try { console.error(msg); } catch (_) {}
+                alert(msg);
+            };
+            document.body.appendChild(fb);
+        });
     }
 
     // 首次挂载
@@ -3360,12 +3611,24 @@ ${JSON.stringify(items.map(s => {
         tryMount();
     }
 
-    // SPA 路由变化监听：轮询 + History API 拦截
+    // SPA 路由变化监听 + 入口自愈：按钮丢失/被页面样式隐藏/UI 没起来时自动重建
     setInterval(() => {
-        if (!document.getElementById('ds-bulk-btn')) {
-            mounted = false;
-            tryMount();
+        const btn = document.getElementById('ds-bulk-btn');
+        let usable = false;
+        if (btn) {
+            try {
+                const r = btn.getBoundingClientRect();
+                const st = window.getComputedStyle(btn);
+                usable = r.width > 8 && r.height > 8 && st.display !== 'none' && st.visibility !== 'hidden' && st.opacity !== '0';
+            } catch (e) { usable = false; }
         }
+        if (!usable) dsEntryEnsure();
+        if (window.__dsBoot.uiReady) return;
+        // UI 没起来：节流重试，最多 20 次，避免构建失败时无限重建拖慢页面
+        if (window.__dsBoot.attempts >= 20) return;
+        if (Date.now() - (window.__dsBoot.lastTryAt || 0) < 4000) return;
+        mounted = false;
+        tryMount();
     }, 1500);
 
     // 监听 pushState / replaceState（SPA 路由）
@@ -3397,13 +3660,22 @@ ${JSON.stringify(items.map(s => {
         },
 
         mount() {
-            // 通过广度查询包含 "深度思考" 的文本节点，抛弃对特定类名的依赖
+            // 锚点策略（由准到宽）：① 官网按钮文字特征 → ② 任意原生 ds-toggle-button → ③ 输入框上方按钮行
+            const KEYWORDS = ['深度思考', '联网搜索', '智能搜索', '搜索', '思考'];
             const allElements = document.querySelectorAll('div[role="button"], div[role="switch"], button, div.ds-toggle-button, div[role="checkbox"]');
-            const anchorBtn = Array.from(allElements).find(b => b.textContent && (b.textContent.includes('深度思考') || b.textContent.includes('联网搜索')));
+            let anchorBtn = Array.from(allElements).find(b => {
+                const t = b.textContent || '';
+                return t && KEYWORDS.some(k => t.includes(k));
+            });
+            if (!anchorBtn) anchorBtn = document.querySelector('div.ds-toggle-button');
 
-            if (!anchorBtn) return;
-
-            const container = anchorBtn.parentElement;
+            let container = anchorBtn ? anchorBtn.parentElement : null;
+            if (!container) {
+                // 官网结构大改时的最后兜底：挂在输入框所在的按钮行
+                const ta = document.querySelector('textarea');
+                container = (ta && ta.closest('div') && ta.closest('div').parentElement) || null;
+            }
+            if (!container) return;
             let btn = document.getElementById(this.btnId);
 
             if (!btn) {
@@ -3439,7 +3711,8 @@ ${JSON.stringify(items.map(s => {
             const btn = document.getElementById(this.btnId);
             if (!btn) return;
             const textEl = btn.querySelector('.ds-inline-btn-text');
-            const arr = JSON.parse(localStorage.getItem(LS_PROMPTS) || '[]');
+            if (!textEl) return;
+            const arr = safeReadPrompts();
             const enabled = arr.filter(p => p.enabled);
 
             if (enabled.length === 0) {
@@ -3456,7 +3729,7 @@ ${JSON.stringify(items.map(s => {
             if (!dp) return;
             if (dp.style.display === 'flex') { dp.style.display = 'none'; return; }
 
-            const arr = JSON.parse(localStorage.getItem(LS_PROMPTS) || '[]');
+            const arr = safeReadPrompts();
             dp.innerHTML = '';
             if (!arr.length) {
                 dp.innerHTML = '<div style="padding:12px; color:#64748b; font-size:13px; text-align:center;">请在增强套件中配置系统提示词</div>';
@@ -3491,6 +3764,15 @@ ${JSON.stringify(items.map(s => {
 
     InlinePromptUI.init();
 
+    // 首次主动挂载（原先只依赖 MutationObserver，页面已渲染完就不会触发）
+    const kickInlineMount = (retry) => {
+        setTimeout(() => {
+            try { InlinePromptUI.mount(); } catch (e) {}
+            if (retry > 0) kickInlineMount(retry - 1);
+        }, 600);
+    };
+    kickInlineMount(5);
+
     // 初始化渲染提示词
     if (typeof renderPrompts === 'function') renderPrompts();
 
@@ -3501,6 +3783,41 @@ ${JSON.stringify(items.map(s => {
         mountTimer = setTimeout(() => InlinePromptUI.mount(), 50);
     });
     domObserver.observe(document.body, { childList: true, subtree: true });
+
+    // ==================== 9. 自检与手动唤起（"看不到插件入口"时的排查通道）====================
+    try {
+        window.__dsDiag.check = function () {
+            const report = {
+                version: DSE_VERSION,
+                url: location.href,
+                readyState: document.readyState,
+                mountError: window.__dsDiag.lastMountError || null,
+                earlyErrors: window.__dsEarlyErrors || [],
+                btnExists: !!document.getElementById('ds-bulk-btn'),
+                overlayExists: !!document.getElementById('ds-bulk-overlay'),
+                inlineBtnExists: !!document.getElementById('ds-inline-prompt-btn'),
+                fetchHooked: !!(window.fetch && String(window.fetch).indexOf('origFetch') > -1),
+                pushStateHooked: !!(history.pushState && String(history.pushState).indexOf('originalPushState') > -1),
+                storage: (function () { try { localStorage.setItem('__ds_probe', '1'); localStorage.removeItem('__ds_probe'); return 'ok'; } catch (e) { return 'blocked: ' + e.message; } })(),
+            };
+            try { console.table ? console.table(report) : console.log(report); } catch (_) { console.log(report); }
+            return report;
+        };
+        console.info(`[DS Enhance Max] v${DSE_VERSION} 脚本已运行（自检：控制台执行 __dsDiag.check()）`);
+    } catch (e) {}
+
+    // 手动唤起：Alt+Shift+D 强制打开控制台（万一悬浮按钮被页面元素遮挡）
+    try {
+        if (!window.__dsHotkeyBound) {
+            window.__dsHotkeyBound = true;
+            document.addEventListener('keydown', (e) => {
+                if (e.altKey && e.shiftKey && (e.key === 'D' || e.key === 'd')) {
+                    const ov = document.getElementById('ds-bulk-overlay');
+                    if (ov) { ov.style.display = 'block'; e.preventDefault(); }
+                }
+            }, true);
+        }
+    } catch (e) {}
 
     }); // end waitForDOM
 })();
