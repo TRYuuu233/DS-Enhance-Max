@@ -1,6 +1,6 @@
 <div align="center">
   
-# 🚀 DS Enhance Max (全能满血版)
+# 🚀 DeepSeek Enhance Max (全能满血版)
 
 **突破原生限制！为 DeepSeek 注入灵魂的高阶增强套件**
 
@@ -15,7 +15,7 @@
 ## 💡 诞生背景
 当你每天与 DeepSeek 进行成百上千次高频对话时，你一定会遇到这些痛点：**历史会话堆积如山无法搜索**、**找不到以前的优秀对话**、**手动清理垃圾会话按到手酸**。
 
-**DS Enhance Max** 就是为了终结这一切而生！这不仅仅是一个脚本，它是你专属的 **AI 对话资产管理神经中枢**。我们通过原生级的无缝注入，为你提供隔离级批量管理、AI 智能打标签、跨多模型引擎无缝切换等史诗级特性。
+**DeepSeek Enhance Max** 就是为了终结这一切而生！这不仅仅是一个脚本，它是你专属的 **AI 对话资产管理神经中枢**。我们通过原生级的无缝注入，为你提供隔离级批量管理、AI 智能打标签、跨多模型引擎无缝切换等史诗级特性。
 
 ---
 
@@ -74,8 +74,8 @@
 
 ### 第二步：一键安装脚本
 点击下方的链接，你的脚本管理器会自动弹出安装界面，点击**“安装”**即可。
-👉 **[一键安装 DS Enhance Max (脚本猫)](https://scriptcat.org/zh-CN/script-show-page/7372)**
-*(备用线路)* 👉 **[一键安装 DS Enhance Max (GitHub)](https://raw.githubusercontent.com/TRYuuu233/DS-Enhance-Max/main/ds-enhance-max.user.js)**
+👉 **[一键安装 DeepSeek Enhance Max (脚本猫)](https://scriptcat.org/zh-CN/script-show-page/7372)**
+*(备用线路)* 👉 **[一键安装 DeepSeek Enhance Max (GitHub)](https://raw.githubusercontent.com/TRYuuu233/DS-Enhance-Max/main/ds-enhance-max.user.js)**
 
 ### 第三步：见证奇迹
 刷新你的 [DeepSeek Chat](https://chat.deepseek.com/) 页面，尽情享受满血版带来的极致效率吧！
