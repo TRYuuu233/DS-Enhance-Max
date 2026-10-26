@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name         DS Enhance Max (满血版) [适用最新DeepSeek网页]
+// @name         DeepSeek Enhance Max (满血版) [适用最新DeepSeek网页]
 // @namespace    https://chat.deepseek.com/
 // @version      8.0.8
 // @description  【满血升级】突破原生限制！支持 AI 智能会话搜索、AI 自动化标签整理、多大模型 API 自由切换、原生隔离级批量管理。集成批量删除、导出、自定义提示词以及批量FORK等满血增强功能。
@@ -50,7 +50,7 @@
             return fn();
         } catch (e) {
             try { window.__dsEarlyErrors.push(label + ': ' + ((e && e.message) || e)); } catch (_) {}
-            try { console.warn('[DS Enhance Max] 启动步骤失败（已跳过，不影响主界面）：' + label, e); } catch (_) {}
+            try { console.warn('[DeepSeek Enhance Max] 启动步骤失败（已跳过，不影响主界面）：' + label, e); } catch (_) {}
             return undefined;
         }
     }
@@ -84,8 +84,8 @@
         btn.type = 'button';
         btn.setAttribute('style', DS_ENTRY_STYLE);
         btn.dataset.dsRole = 'entry';
-        btn.title = 'DS Enhance Max：点击打开控制台（Alt+Shift+D 亦可）';
-        btn.textContent = window.__dsBoot.uiReady ? 'DS Enhance Max' : 'DS Enhance Max …';
+        btn.title = 'DeepSeek Enhance Max：点击打开控制台（Alt+Shift+D 亦可）';
+        btn.textContent = window.__dsBoot.uiReady ? 'DeepSeek Enhance Max' : 'DeepSeek Enhance Max …';
         btn.addEventListener('click', (ev) => {
             ev.preventDefault();
             ev.stopPropagation();
@@ -103,13 +103,13 @@
         const btn = dsEntryEnsure();
         if (!btn) return;
         if (state === 'ready') {
-            btn.textContent = 'DS Enhance Max';
+            btn.textContent = 'DeepSeek Enhance Max';
             btn.setAttribute('style', DS_ENTRY_STYLE);
-            btn.title = 'DS Enhance Max：点击打开控制台（Alt+Shift+D 亦可）';
+            btn.title = 'DeepSeek Enhance Max：点击打开控制台（Alt+Shift+D 亦可）';
         } else {
-            btn.textContent = 'DS Enhance Max ⚠';
+            btn.textContent = 'DeepSeek Enhance Max ⚠';
             btn.setAttribute('style', DS_ENTRY_STYLE + 'background:#fef2f2;border-color:#fca5a5;color:#b91c1c;');
-            btn.title = 'DS Enhance Max 未能正常启动：点击查看自检报告' + (note ? ('（' + note + '）') : '');
+            btn.title = 'DeepSeek Enhance Max 未能正常启动：点击查看自检报告' + (note ? ('（' + note + '）') : '');
         }
     }
 
@@ -140,7 +140,7 @@
             ];
 
             wrap.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">'
-                + '<strong style="font-size:14px;">DS Enhance Max · 自检报告</strong>'
+                + '<strong style="font-size:14px;">DeepSeek Enhance Max · 自检报告</strong>'
                 + '<span data-ds-close="1" style="cursor:pointer;color:#94a3b8;font-size:16px;padding:0 4px;">×</span></div>'
                 + '<table style="width:100%;border-collapse:collapse;">'
                 + rows.map(r => '<tr><td style="padding:3px 0;color:#64748b;white-space:nowrap;vertical-align:top;">' + esc(r[0]) + '</td><td style="padding:3px 0 3px 10px;color:#0f172a;word-break:break-all;">' + esc(r[1]) + '</td></tr>').join('')
@@ -168,7 +168,7 @@
                     return;
                 }
                 if (t.dataset.dsCopy) {
-                    const text = 'DS Enhance Max ' + DSE_VERSION + '\nURL: ' + location.href + '\n'
+                    const text = 'DeepSeek Enhance Max ' + DSE_VERSION + '\nURL: ' + location.href + '\n'
                         + rows.map(r => r[0] + ': ' + r[1]).join('\n')
                         + '\n错误:\n' + (errs.length ? errs.join('\n') : '无');
                     try {
@@ -1011,7 +1011,7 @@
         // 浮动入口按钮
         const triggerBtn = document.createElement('button');
         triggerBtn.id = 'ds-bulk-btn';
-        triggerBtn.textContent = 'DS Enhance Max';
+        triggerBtn.textContent = 'DeepSeek Enhance Max';
         // 临时兜底：万一下面接线途中出错，按钮依然可点，并弹出自检报告
         triggerBtn.onclick = () => { if (!window.__dsBoot.uiReady) dsShowSelfCheck(); };
 
@@ -1023,7 +1023,7 @@
         overlay.innerHTML = `
             <div id="ds-bulk-modal">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-                    <h2 style="margin:0; font-size:18px; font-weight:700; color:#0f172a;">DS Enhance Max <span style="font-size:12px; font-weight:normal; color:#10b981; background:#ecfdf5; padding:2px 8px; border-radius:12px; margin-left:8px;">AI 智能增强全能版</span></h2>
+                    <h2 style="margin:0; font-size:18px; font-weight:700; color:#0f172a;">DeepSeek Enhance Max <span style="font-size:12px; font-weight:normal; color:#10b981; background:#ecfdf5; padding:2px 8px; border-radius:12px; margin-left:8px;">AI 智能增强全能版</span></h2>
                     <button class="ds-btn ds-btn-close" id="ds-close-btn" style="padding:6px 12px; margin:0;">关闭控制台</button>
                 </div>
 
@@ -1384,7 +1384,7 @@
                 <!-- Tab 6: 关于开发者 -->
                 <div id="ds-tab-about" class="ds-tab-content">
                     <div style="text-align:center; padding:40px 20px;">
-                        <h3 style="font-size:24px; color:#1e293b; margin-bottom:12px; font-weight:800; background:linear-gradient(90deg, #3b82f6, #8b5cf6); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">DS Enhance Max</h3>
+                        <h3 style="font-size:24px; color:#1e293b; margin-bottom:12px; font-weight:800; background:linear-gradient(90deg, #3b82f6, #8b5cf6); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">DeepSeek Enhance Max</h3>
                         <p style="font-size:14px; color:#64748b; margin-bottom:30px; line-height:1.6;">突破限制的 DeepSeek 全能增强套件，专为极致效率而生。</p>
 
                         <div style="display:inline-flex; flex-direction:column; gap:16px; align-items:center; background:#f8fafc; padding:24px 40px; border-radius:16px; border:1px solid #e2e8f0; box-shadow:0 10px 30px rgba(0,0,0,0.05);">
@@ -3574,13 +3574,13 @@ ${JSON.stringify(items.map(s => {
             window.__dsBoot.uiReady = true;
             window.__dsBoot.uiError = null;
             window.__dsDiag.mountedAt = Date.now();
-            try { console.info(`[DS Enhance Max] v${DSE_VERSION} 已挂载，入口按钮 #ds-bulk-btn 可用`); } catch (_) {}
+            try { console.info(`[DeepSeek Enhance Max] v${DSE_VERSION} 已挂载，入口按钮 #ds-bulk-btn 可用`); } catch (_) {}
         } catch (e) {
             mounted = false;
             window.__dsBoot.uiReady = false;
             window.__dsBoot.uiError = (e && e.stack) || String(e);
             window.__dsDiag.lastMountError = window.__dsBoot.uiError;
-            try { console.error('[DS Enhance Max] 主界面构建失败，已切换到尸检入口：', e); } catch (_) {}
+            try { console.error('[DeepSeek Enhance Max] 主界面构建失败，已切换到尸检入口：', e); } catch (_) {}
             dsEntrySetState('warn', (e && e.message) || '未知错误');
             if (!document.getElementById('ds-bulk-btn')) showFallbackEntry(e);
         }
@@ -3593,10 +3593,10 @@ ${JSON.stringify(items.map(s => {
             if (document.getElementById('ds-bulk-btn')) return;
             const fb = document.createElement('button');
             fb.id = 'ds-bulk-btn';
-            fb.textContent = 'DS Enhance Max（兜底入口）';
+            fb.textContent = 'DeepSeek Enhance Max（兜底入口）';
             fb.style.cssText = 'position:fixed !important; top:80px !important; right:16px !important; left:auto !important; z-index:2147483000 !important; display:block !important; visibility:visible !important; padding:8px 14px !important; background:#ef4444 !important; color:#fff !important; border:none !important; border-radius:20px !important; font-size:13px !important; font-weight:600 !important; cursor:pointer !important; box-shadow:0 4px 14px rgba(239,68,68,.35) !important; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif !important;';
             fb.onclick = () => {
-                const msg = 'DS Enhance Max 主界面构建失败，请把下面这段报错发给作者：\n\n' + ((err && (err.stack || err.message)) || String(err));
+                const msg = 'DeepSeek Enhance Max 主界面构建失败，请把下面这段报错发给作者：\n\n' + ((err && (err.stack || err.message)) || String(err));
                 try { console.error(msg); } catch (_) {}
                 alert(msg);
             };
@@ -3803,7 +3803,7 @@ ${JSON.stringify(items.map(s => {
             try { console.table ? console.table(report) : console.log(report); } catch (_) { console.log(report); }
             return report;
         };
-        console.info(`[DS Enhance Max] v${DSE_VERSION} 脚本已运行（自检：控制台执行 __dsDiag.check()）`);
+        console.info(`[DeepSeek Enhance Max] v${DSE_VERSION} 脚本已运行（自检：控制台执行 __dsDiag.check()）`);
     } catch (e) {}
 
     // 手动唤起：Alt+Shift+D 强制打开控制台（万一悬浮按钮被页面元素遮挡）
